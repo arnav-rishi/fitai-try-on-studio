@@ -1,12 +1,12 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
+import type { Transition } from "framer-motion";
 import { Upload, Sparkles, ArrowRight } from "lucide-react";
-import heroImage from "@/assets/hero-fashion.jpg";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 32 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] },
+  transition: { duration: 0.7, delay, ease: "easeOut" } as Transition,
 });
 
 const TryOnCard = () => {
