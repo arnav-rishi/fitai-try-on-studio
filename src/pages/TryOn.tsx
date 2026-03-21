@@ -1,18 +1,19 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { ArrowLeft, Upload, ShoppingCart, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Upload, ShoppingCart, RefreshCw, Sparkles, X, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import garment1 from "@/assets/garment-1.jpg";
 import garment2 from "@/assets/garment-2.jpg";
 import garment3 from "@/assets/garment-3.jpg";
 import garment4 from "@/assets/garment-4.jpg";
 
 const GARMENTS = [
-  { id: 1, name: "Rust Gold Embroidered Kurta", price: "₹3,490", img: garment1, tag: "Bestseller" },
-  { id: 2, name: "Ivory Anarkali Set", price: "₹5,290", img: garment2, tag: "New Arrival" },
-  { id: 3, name: "Emerald Silk Saree", price: "₹8,990", img: garment3, tag: "Festive Edit" },
-  { id: 4, name: "Midnight Blue Sharara", price: "₹6,190", img: garment4, tag: null },
+  { id: 1, name: "Rust Gold Embroidered Kurta", price: "₹3,490", img: garment1, tag: "Bestseller", category: "tops" },
+  { id: 2, name: "Ivory Anarkali Set", price: "₹5,290", img: garment2, tag: "New Arrival", category: "one-pieces" },
+  { id: 3, name: "Emerald Silk Saree", price: "₹8,990", img: garment3, tag: "Festive Edit", category: "one-pieces" },
+  { id: 4, name: "Midnight Blue Sharara", price: "₹6,190", img: garment4, tag: null, category: "bottoms" },
 ];
 
 const SIZES = ["XS", "S", "M", "L", "XL"];
@@ -25,6 +26,7 @@ interface Garment {
   price: string;
   img: string;
   tag: string | null;
+  category: string;
 }
 
 const pageVariants: Variants = {
@@ -35,14 +37,29 @@ const pageVariants: Variants = {
 
 const pageTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] };
 
+/** Convert a URL (blob or asset path) to a base64 data URL string */
+async function toBase64(url: string): Promise<string> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export default function TryOn() {
   const [step, setStep] = useState<Step>("grid");
   const [selected, setSelected] = useState<Garment | null>(null);
   const [size, setSize] = useState("M");
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState("Generating your try-on…");
   const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleSelectGarment = (g: Garment) => {
@@ -54,6 +71,8 @@ export default function TryOn() {
     if (!file.type.startsWith("image/")) return;
     const url = URL.createObjectURL(file);
     setPhoto(url);
+    setPhotoFile(file);
+    setError(null);
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -63,20 +82,49 @@ export default function TryOn() {
     if (file) handleFile(file);
   }, []);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!photo || !selected) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setResult(photo);
+    setError(null);
+    setLoadingMsg("Preparing images…");
+
+    try {
+      // Convert person photo (blob URL) and garment asset to base64
+      const [modelBase64, garmentBase64] = await Promise.all([
+        toBase64(photo),
+        toBase64(selected.img),
+      ]);
+
+      setLoadingMsg("Generating your try-on… (~30s)");
+
+      const { data, error: fnError } = await supabase.functions.invoke("fashn-tryon", {
+        body: {
+          model_image: modelBase64,
+          garment_image: garmentBase64,
+          category: selected.category,
+        },
+      });
+
+      if (fnError || data?.error) {
+        throw new Error(data?.error || fnError?.message || "Try-on failed");
+      }
+
+      setResult(data.output_url);
       setStep("result");
-    }, 2800);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
     setStep("grid");
     setSelected(null);
     setPhoto(null);
+    setPhotoFile(null);
     setResult(null);
+    setError(null);
     setSize("M");
   };
 
@@ -316,13 +364,20 @@ export default function TryOn() {
                     >
                       <img src={photo} alt="Uploaded" className="w-full max-h-72 object-cover" />
                       <button
-                        onClick={() => setPhoto(null)}
+                        onClick={() => { setPhoto(null); setPhotoFile(null); }}
                         className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm p-1.5 border border-border hover:border-foreground/40 transition-colors"
                         style={{ borderRadius: "2px" }}
                       >
                         <X size={14} className="text-foreground" />
                       </button>
                     </div>
+
+                    {error && (
+                      <div className="flex items-start gap-2 border border-destructive/40 bg-destructive/10 px-4 py-3" style={{ borderRadius: "2px" }}>
+                        <AlertCircle size={14} className="text-destructive mt-0.5 shrink-0" />
+                        <p className="font-body text-xs text-destructive">{error}</p>
+                      </div>
+                    )}
 
                     <button
                       onClick={handleGenerate}
@@ -333,7 +388,7 @@ export default function TryOn() {
                       {loading ? (
                         <>
                           <div className="w-4 h-4 border-2 border-cream border-t-transparent rounded-full animate-spin" />
-                          Generating your try-on…
+                          {loadingMsg}
                         </>
                       ) : (
                         <>
