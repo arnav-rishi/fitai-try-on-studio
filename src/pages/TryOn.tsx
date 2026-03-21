@@ -364,13 +364,20 @@ export default function TryOn() {
                     >
                       <img src={photo} alt="Uploaded" className="w-full max-h-72 object-cover" />
                       <button
-                        onClick={() => setPhoto(null)}
+                        onClick={() => { setPhoto(null); setPhotoFile(null); }}
                         className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm p-1.5 border border-border hover:border-foreground/40 transition-colors"
                         style={{ borderRadius: "2px" }}
                       >
                         <X size={14} className="text-foreground" />
                       </button>
                     </div>
+
+                    {error && (
+                      <div className="flex items-start gap-2 border border-destructive/40 bg-destructive/10 px-4 py-3" style={{ borderRadius: "2px" }}>
+                        <AlertCircle size={14} className="text-destructive mt-0.5 shrink-0" />
+                        <p className="font-body text-xs text-destructive">{error}</p>
+                      </div>
+                    )}
 
                     <button
                       onClick={handleGenerate}
@@ -381,7 +388,7 @@ export default function TryOn() {
                       {loading ? (
                         <>
                           <div className="w-4 h-4 border-2 border-cream border-t-transparent rounded-full animate-spin" />
-                          Generating your try-on…
+                          {loadingMsg}
                         </>
                       ) : (
                         <>
