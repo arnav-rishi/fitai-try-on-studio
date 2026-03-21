@@ -1,18 +1,19 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { ArrowLeft, Upload, ShoppingCart, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Upload, ShoppingCart, RefreshCw, Sparkles, X, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import garment1 from "@/assets/garment-1.jpg";
 import garment2 from "@/assets/garment-2.jpg";
 import garment3 from "@/assets/garment-3.jpg";
 import garment4 from "@/assets/garment-4.jpg";
 
 const GARMENTS = [
-  { id: 1, name: "Rust Gold Embroidered Kurta", price: "₹3,490", img: garment1, tag: "Bestseller" },
-  { id: 2, name: "Ivory Anarkali Set", price: "₹5,290", img: garment2, tag: "New Arrival" },
-  { id: 3, name: "Emerald Silk Saree", price: "₹8,990", img: garment3, tag: "Festive Edit" },
-  { id: 4, name: "Midnight Blue Sharara", price: "₹6,190", img: garment4, tag: null },
+  { id: 1, name: "Rust Gold Embroidered Kurta", price: "₹3,490", img: garment1, tag: "Bestseller", category: "tops" },
+  { id: 2, name: "Ivory Anarkali Set", price: "₹5,290", img: garment2, tag: "New Arrival", category: "one-pieces" },
+  { id: 3, name: "Emerald Silk Saree", price: "₹8,990", img: garment3, tag: "Festive Edit", category: "one-pieces" },
+  { id: 4, name: "Midnight Blue Sharara", price: "₹6,190", img: garment4, tag: null, category: "bottoms" },
 ];
 
 const SIZES = ["XS", "S", "M", "L", "XL"];
@@ -25,6 +26,7 @@ interface Garment {
   price: string;
   img: string;
   tag: string | null;
+  category: string;
 }
 
 const pageVariants: Variants = {
@@ -35,14 +37,29 @@ const pageVariants: Variants = {
 
 const pageTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] };
 
+/** Convert a URL (blob or asset path) to a base64 data URL string */
+async function toBase64(url: string): Promise<string> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export default function TryOn() {
   const [step, setStep] = useState<Step>("grid");
   const [selected, setSelected] = useState<Garment | null>(null);
   const [size, setSize] = useState("M");
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState("Generating your try-on…");
   const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleSelectGarment = (g: Garment) => {
