@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, useScroll } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
 
 const Nav = () => {
   const [scrolled, setScrolled] = useState(false);

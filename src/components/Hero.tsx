@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import type { Transition } from "framer-motion";
-import { Upload, Sparkles, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import heroFashion from "@/assets/hero-fashion.jpg";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 32 },
