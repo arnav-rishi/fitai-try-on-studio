@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, useScroll } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const Nav = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -26,7 +27,10 @@ const Nav = () => {
     >
       <div className="container mx-auto flex items-center justify-between py-5 px-6 md:px-8">
         {/* Logo */}
-        <div className="font-display text-xl font-semibold tracking-tight text-cream cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+        <div
+          className="font-display text-xl font-semibold tracking-tight text-cream cursor-pointer"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
           Fit<span className="text-terracotta">AI</span>
         </div>
 
@@ -45,6 +49,14 @@ const Nav = () => {
               {item.label}
             </button>
           ))}
+
+          <Link
+            to="/tryon"
+            className="font-body text-sm text-terracotta border border-terracotta/40 px-4 py-1.5 hover:bg-terracotta hover:text-cream transition-all duration-200 tracking-wide"
+            style={{ borderRadius: "2px" }}
+          >
+            Try for free
+          </Link>
         </div>
 
         {/* CTA */}
