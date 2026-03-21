@@ -71,6 +71,8 @@ export default function TryOn() {
     if (!file.type.startsWith("image/")) return;
     const url = URL.createObjectURL(file);
     setPhoto(url);
+    setPhotoFile(file);
+    setError(null);
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -80,20 +82,49 @@ export default function TryOn() {
     if (file) handleFile(file);
   }, []);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!photo || !selected) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setResult(photo);
+    setError(null);
+    setLoadingMsg("Preparing images…");
+
+    try {
+      // Convert person photo (blob URL) and garment asset to base64
+      const [modelBase64, garmentBase64] = await Promise.all([
+        toBase64(photo),
+        toBase64(selected.img),
+      ]);
+
+      setLoadingMsg("Generating your try-on… (~30s)");
+
+      const { data, error: fnError } = await supabase.functions.invoke("fashn-tryon", {
+        body: {
+          model_image: modelBase64,
+          garment_image: garmentBase64,
+          category: selected.category,
+        },
+      });
+
+      if (fnError || data?.error) {
+        throw new Error(data?.error || fnError?.message || "Try-on failed");
+      }
+
+      setResult(data.output_url);
       setStep("result");
-    }, 2800);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
     setStep("grid");
     setSelected(null);
     setPhoto(null);
+    setPhotoFile(null);
     setResult(null);
+    setError(null);
     setSize("M");
   };
 
