@@ -38,14 +38,26 @@ const pageVariants: Variants = {
 const pageTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] };
 
 /**
- * Load an image URL (blob or asset), resize to max 1024px on the longest side,
- * encode as JPEG base64, and return the raw base64 string (no data-URI prefix).
- * fashn.ai expects plain base64, not a data-URI.
+ * Load any image URL (blob:, http:, or bundled asset path), draw it onto a
+ * canvas (max 1024px), and return the full data-URI string
+ * ("data:image/jpeg;base64,…").  fashn.ai accepts both URLs and data-URIs;
+ * we always use data-URIs so the payload is self-contained.
  */
-async function toResizedBase64(url: string, maxDim = 1024): Promise<string> {
+async function toDataUri(url: string, maxDim = 1024): Promise<string> {
+  // For bundled assets that may fail CORS as <img src>, fetch the blob first.
+  const srcUrl = await (async () => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return url;
+      const blob = await res.blob();
+      return URL.createObjectURL(blob);
+    } catch {
+      return url; // fall back to original URL
+    }
+  })();
+
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
     img.onload = () => {
       let { width, height } = img;
       if (width > maxDim || height > maxDim) {
@@ -63,13 +75,11 @@ async function toResizedBase64(url: string, maxDim = 1024): Promise<string> {
       const ctx = canvas.getContext("2d");
       if (!ctx) return reject(new Error("Canvas not available"));
       ctx.drawImage(img, 0, 0, width, height);
-      // toDataURL gives "data:image/jpeg;base64,<data>" — strip the prefix
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-      const base64 = dataUrl.split(",")[1];
-      resolve(base64);
+      // fashn.ai accepts "data:image/jpeg;base64,<data>" — keep the full data-URI
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
     };
     img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-    img.src = url;
+    img.src = srcUrl;
   });
 }
 
@@ -114,9 +124,9 @@ export default function TryOn() {
 
     try {
       // Resize + compress both images, strip data-URI prefix → raw base64 for fashn.ai
-      const [modelBase64, garmentBase64] = await Promise.all([
-        toResizedBase64(photo),
-        toResizedBase64(selected.img),
+      const [modelDataUri, garmentDataUri] = await Promise.all([
+        toDataUri(photo),
+        toDataUri(selected.img),
       ]);
 
       setLoadingMsg("Starting try-on job…");
@@ -124,8 +134,8 @@ export default function TryOn() {
       // Step 1: Start the job — returns a job ID immediately
       const { data: runData, error: runError } = await supabase.functions.invoke("fashn-run", {
         body: {
-          model_image: modelBase64,
-          garment_image: garmentBase64,
+          model_image: modelDataUri,
+          garment_image: garmentDataUri,
           category: selected.category,
         },
       });
