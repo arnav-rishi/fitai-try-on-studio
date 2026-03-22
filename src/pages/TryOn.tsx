@@ -134,8 +134,8 @@ export default function TryOn() {
       // Step 1: Start the job — returns a job ID immediately
       const { data: runData, error: runError } = await supabase.functions.invoke("fashn-run", {
         body: {
-          model_image: modelBase64,
-          garment_image: garmentBase64,
+          model_image: modelDataUri,
+          garment_image: garmentDataUri,
           category: selected.category,
         },
       });
