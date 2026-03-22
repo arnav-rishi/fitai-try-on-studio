@@ -113,10 +113,10 @@ export default function TryOn() {
     setLoadingMsg("Preparing images…");
 
     try {
-      // Convert person photo (blob URL) and garment asset to base64
+      // Resize + compress both images, strip data-URI prefix → raw base64 for fashn.ai
       const [modelBase64, garmentBase64] = await Promise.all([
-        toBase64(photo),
-        toBase64(selected.img),
+        toResizedBase64(photo),
+        toResizedBase64(selected.img),
       ]);
 
       setLoadingMsg("Starting try-on job…");
