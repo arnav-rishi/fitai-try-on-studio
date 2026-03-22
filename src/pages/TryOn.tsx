@@ -37,15 +37,39 @@ const pageVariants: Variants = {
 
 const pageTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] };
 
-/** Convert a URL (blob or asset path) to a base64 data URL string */
-async function toBase64(url: string): Promise<string> {
-  const res = await fetch(url);
-  const blob = await res.blob();
+/**
+ * Load an image URL (blob or asset), resize to max 1024px on the longest side,
+ * encode as JPEG base64, and return the raw base64 string (no data-URI prefix).
+ * fashn.ai expects plain base64, not a data-URI.
+ */
+async function toResizedBase64(url: string, maxDim = 1024): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width >= height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas not available"));
+      ctx.drawImage(img, 0, 0, width, height);
+      // toDataURL gives "data:image/jpeg;base64,<data>" — strip the prefix
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      const base64 = dataUrl.split(",")[1];
+      resolve(base64);
+    };
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url;
   });
 }
 
@@ -89,10 +113,10 @@ export default function TryOn() {
     setLoadingMsg("Preparing images…");
 
     try {
-      // Convert person photo (blob URL) and garment asset to base64
+      // Resize + compress both images, strip data-URI prefix → raw base64 for fashn.ai
       const [modelBase64, garmentBase64] = await Promise.all([
-        toBase64(photo),
-        toBase64(selected.img),
+        toResizedBase64(photo),
+        toResizedBase64(selected.img),
       ]);
 
       setLoadingMsg("Starting try-on job…");
