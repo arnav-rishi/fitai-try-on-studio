@@ -95,9 +95,10 @@ export default function TryOn() {
         toBase64(selected.img),
       ]);
 
-      setLoadingMsg("Generating your try-on… (~30s)");
+      setLoadingMsg("Starting try-on job…");
 
-      const { data, error: fnError } = await supabase.functions.invoke("fashn-tryon", {
+      // Step 1: Start the job — returns a job ID immediately
+      const { data: runData, error: runError } = await supabase.functions.invoke("fashn-run", {
         body: {
           model_image: modelBase64,
           garment_image: garmentBase64,
@@ -105,12 +106,56 @@ export default function TryOn() {
         },
       });
 
-      if (fnError || data?.error) {
-        throw new Error(data?.error || fnError?.message || "Try-on failed");
+      if (runError || runData?.error) {
+        throw new Error(runData?.error || runError?.message || "Failed to start try-on job");
       }
 
-      setResult(data.output_url);
-      setStep("result");
+      const jobId: string = runData.id;
+      if (!jobId) throw new Error("No job ID returned");
+
+      setLoadingMsg("Generating your try-on… (~30s)");
+
+      // Step 2: Poll from the browser every 3s (up to ~90s)
+      const maxAttempts = 30;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await new Promise((r) => setTimeout(r, 3000));
+
+        const { data: statusData, error: statusError } = await supabase.functions.invoke("fashn-status", {
+          body: { id: jobId },
+        });
+
+        if (statusError || statusData?.error) {
+          console.warn("Status poll error:", statusError || statusData?.error);
+          continue; // keep polling on transient errors
+        }
+
+        const status: string = statusData?.status;
+        console.log(`Poll ${attempt + 1}: status = ${status}`);
+
+        if (status === "completed") {
+          const outputUrl: string = statusData?.output?.[0];
+          if (!outputUrl) throw new Error("No output URL in completed job");
+          setResult(outputUrl);
+          setStep("result");
+          return;
+        }
+
+        if (status === "failed") {
+          const rawErr = statusData?.error;
+          const errMsg =
+            typeof rawErr === "string"
+              ? rawErr
+              : rawErr
+              ? JSON.stringify(rawErr)
+              : "Unknown error";
+          throw new Error(`Try-on failed: ${errMsg}`);
+        }
+
+        // still starting / processing — update label
+        if (attempt > 5) setLoadingMsg("Almost there… hang tight");
+      }
+
+      throw new Error("Timed out waiting for try-on result");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
