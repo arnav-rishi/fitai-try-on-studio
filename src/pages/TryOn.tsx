@@ -136,7 +136,7 @@ export default function TryOn() {
         body: {
           model_image: modelDataUri,
           garment_image: garmentDataUri,
-          category: selected.category,
+          category: selected.category ?? "auto",
         },
       });
 
