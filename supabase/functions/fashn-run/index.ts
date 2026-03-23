@@ -32,7 +32,12 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${FASHN_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ model_image, garment_image, category }),
+      body: JSON.stringify({
+        model_image,
+        garment_image,
+        category,
+        mode: 'tryon-max',
+      }),
     });
 
     const runText = await runRes.text();
