@@ -12,8 +12,8 @@ import garment4 from "@/assets/garment-4.jpg";
 const GARMENTS = [
   { id: 1, name: "Rust Gold Embroidered Kurta", price: "₹3,490", img: garment1, tag: "Bestseller", category: "tops" },
   { id: 2, name: "Ivory Anarkali Set", price: "₹5,290", img: garment2, tag: "New Arrival", category: "one-pieces" },
-  { id: 3, name: "Emerald Silk Saree", price: "₹8,990", img: garment3, tag: "Festive Edit", category: "one-pieces" },
-  { id: 4, name: "Midnight Blue Sharara", price: "₹6,190", img: garment4, tag: null, category: "bottoms" },
+  { id: 3, name: "Peacock Blue Floral Kurti", price: "₹4,190", img: garment3, tag: "Festive Edit", category: "tops" },
+  { id: 4, name: "Blush Pink Embroidered Frock", price: "₹5,890", img: garment4, tag: "New Arrival", category: "one-pieces" },
 ];
 
 const SIZES = ["XS", "S", "M", "L", "XL"];
@@ -39,12 +39,10 @@ const pageTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as [number, num
 
 /**
  * Load any image URL (blob:, http:, or bundled asset path), draw it onto a
- * canvas (max 1024px), and return the full data-URI string
- * ("data:image/jpeg;base64,…").  fashn.ai accepts both URLs and data-URIs;
- * we always use data-URIs so the payload is self-contained.
+ * canvas (max 1024px), and return the full data-URI string.
+ * fashn.ai accepts data-URIs with the prefix included.
  */
 async function toDataUri(url: string, maxDim = 1024): Promise<string> {
-  // For bundled assets that may fail CORS as <img src>, fetch the blob first.
   const srcUrl = await (async () => {
     try {
       const res = await fetch(url);
@@ -52,7 +50,7 @@ async function toDataUri(url: string, maxDim = 1024): Promise<string> {
       const blob = await res.blob();
       return URL.createObjectURL(blob);
     } catch {
-      return url; // fall back to original URL
+      return url;
     }
   })();
 
@@ -75,7 +73,6 @@ async function toDataUri(url: string, maxDim = 1024): Promise<string> {
       const ctx = canvas.getContext("2d");
       if (!ctx) return reject(new Error("Canvas not available"));
       ctx.drawImage(img, 0, 0, width, height);
-      // fashn.ai accepts "data:image/jpeg;base64,<data>" — keep the full data-URI
       resolve(canvas.toDataURL("image/jpeg", 0.85));
     };
     img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
@@ -123,15 +120,18 @@ export default function TryOn() {
     setLoadingMsg("Preparing images…");
 
     try {
-      // Resize + compress both images, strip data-URI prefix → raw base64 for fashn.ai
       const [modelDataUri, garmentDataUri] = await Promise.all([
         toDataUri(photo),
         toDataUri(selected.img),
       ]);
 
+      console.log("model_image length:", modelDataUri.length);
+      console.log("garment_image length:", garmentDataUri.length);
+      console.log("model_image prefix:", modelDataUri.substring(0, 50));
+      console.log("garment_image prefix:", garmentDataUri.substring(0, 50));
+
       setLoadingMsg("Starting try-on job…");
 
-      // Step 1: Start the job — returns a job ID immediately
       const { data: runData, error: runError } = await supabase.functions.invoke("fashn-run", {
         body: {
           model_image: modelDataUri,
@@ -149,7 +149,6 @@ export default function TryOn() {
 
       setLoadingMsg("Generating your try-on… (~30s)");
 
-      // Step 2: Poll from the browser every 3s (up to ~90s)
       const maxAttempts = 30;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         await new Promise((r) => setTimeout(r, 3000));
@@ -160,7 +159,7 @@ export default function TryOn() {
 
         if (statusError || statusData?.error) {
           console.warn("Status poll error:", statusError || statusData?.error);
-          continue; // keep polling on transient errors
+          continue;
         }
 
         const status: string = statusData?.status;
@@ -185,7 +184,6 @@ export default function TryOn() {
           throw new Error(`Try-on failed: ${errMsg}`);
         }
 
-        // still starting / processing — update label
         if (attempt > 5) setLoadingMsg("Almost there… hang tight");
       }
 
@@ -211,7 +209,7 @@ export default function TryOn() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Minimal nav */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto flex items-center justify-between py-4 px-6 md:px-8">
+        <div className="container mx-auto flex items-center justify-between py-3 px-4 md:py-4 md:px-8">
           <Link
             to="/"
             className="flex items-center gap-2 font-body text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
@@ -219,14 +217,14 @@ export default function TryOn() {
             <ArrowLeft size={14} />
             Back
           </Link>
-          <div className="font-display text-lg font-semibold tracking-tight text-foreground">
+          <div className="font-display text-base md:text-lg font-semibold tracking-tight text-foreground">
             Fit<span className="text-terracotta">AI</span>
           </div>
-          <div className="w-16" />
+          <div className="w-12 md:w-16" />
         </div>
       </header>
 
-      <main className="pt-20 pb-16">
+      <main className="pt-16 md:pt-20 pb-12 md:pb-16">
         <AnimatePresence mode="wait">
 
           {/* ── STEP 1: GARMENT GRID ── */}
@@ -238,18 +236,18 @@ export default function TryOn() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="container mx-auto px-6 md:px-8 py-10"
+              className="container mx-auto px-4 md:px-8 py-6 md:py-10"
             >
-              <div className="mb-10">
-                <p className="font-body text-xs tracking-widest text-terracotta uppercase mb-3">
+              <div className="mb-6 md:mb-10">
+                <p className="font-body text-xs tracking-widest text-terracotta uppercase mb-2 md:mb-3">
                   Virtual Try-On
                 </p>
-                <h1 className="font-display text-4xl md:text-5xl font-semibold text-foreground leading-tight">
+                <h1 className="font-display text-2xl sm:text-3xl md:text-5xl font-semibold text-foreground leading-tight">
                   Choose a garment to try on
                 </h1>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
                 {GARMENTS.map((g) => (
                   <button
                     key={g.id}
@@ -257,26 +255,27 @@ export default function TryOn() {
                     className="group text-left focus:outline-none"
                   >
                     <div
-                      className="relative overflow-hidden bg-card border border-border aspect-[3/4] mb-3"
+                      className="relative overflow-hidden bg-card border border-border aspect-[3/4] mb-2 md:mb-3"
                       style={{ borderRadius: "2px" }}
                     >
                       <img
                         src={g.img}
                         alt={g.name}
+                        loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       {g.tag && (
                         <span
-                          className="absolute top-3 left-3 font-body text-xs tracking-widest uppercase text-foreground bg-background/80 backdrop-blur-sm px-2 py-1"
+                          className="absolute top-2 left-2 md:top-3 md:left-3 font-body text-[10px] md:text-xs tracking-widest uppercase text-foreground bg-background/80 backdrop-blur-sm px-1.5 py-0.5 md:px-2 md:py-1"
                           style={{ borderRadius: "1px" }}
                         >
                           {g.tag}
                         </span>
                       )}
-                      <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-background/60 to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 h-10 md:h-14 bg-gradient-to-t from-background/60 to-transparent" />
                     </div>
-                    <p className="font-body text-sm text-foreground leading-snug mb-1">{g.name}</p>
-                    <p className="font-body text-sm text-terracotta">{g.price}</p>
+                    <p className="font-body text-xs md:text-sm text-foreground leading-snug mb-0.5 md:mb-1">{g.name}</p>
+                    <p className="font-body text-xs md:text-sm text-terracotta">{g.price}</p>
                   </button>
                 ))}
               </div>
@@ -292,19 +291,19 @@ export default function TryOn() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="container mx-auto px-6 md:px-8 py-10"
+              className="container mx-auto px-4 md:px-8 py-6 md:py-10"
             >
               <button
                 onClick={() => setStep("grid")}
-                className="flex items-center gap-2 font-body text-xs text-muted-foreground hover:text-foreground transition-colors mb-8 tracking-wide uppercase"
+                className="flex items-center gap-2 font-body text-xs text-muted-foreground hover:text-foreground transition-colors mb-5 md:mb-8 tracking-wide uppercase"
               >
                 <ArrowLeft size={12} /> All garments
               </button>
 
-              <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
+              <div className="grid md:grid-cols-2 gap-6 md:gap-10 lg:gap-16 items-start">
                 {/* Image */}
                 <div
-                  className="bg-card border border-border overflow-hidden aspect-[3/4]"
+                  className="bg-card border border-border overflow-hidden aspect-[3/4] max-w-xs mx-auto w-full md:max-w-none"
                   style={{ borderRadius: "2px" }}
                 >
                   <img
@@ -315,15 +314,15 @@ export default function TryOn() {
                 </div>
 
                 {/* Details */}
-                <div className="flex flex-col gap-6 md:pt-4">
+                <div className="flex flex-col gap-5 md:gap-6 md:pt-4">
                   <div>
                     <p className="font-body text-xs tracking-widest text-muted-foreground uppercase mb-2">
                       FitAI Collection
                     </p>
-                    <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground leading-tight mb-3">
+                    <h2 className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold text-foreground leading-tight mb-2 md:mb-3">
                       {selected.name}
                     </h2>
-                    <p className="font-display text-2xl text-terracotta">{selected.price}</p>
+                    <p className="font-display text-xl md:text-2xl text-terracotta">{selected.price}</p>
                   </div>
 
                   {/* Size selector */}
@@ -336,7 +335,7 @@ export default function TryOn() {
                         <button
                           key={s}
                           onClick={() => setSize(s)}
-                          className={`font-body text-sm w-11 h-11 border transition-all duration-200 ${
+                          className={`font-body text-sm w-10 h-10 md:w-11 md:h-11 border transition-all duration-200 ${
                             size === s
                               ? "border-foreground text-foreground bg-secondary"
                               : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground"
@@ -350,22 +349,22 @@ export default function TryOn() {
                   </div>
 
                   {/* Buttons */}
-                  <div className="flex flex-col gap-3 pt-2">
+                  <div className="flex flex-col gap-3 pt-1 md:pt-2">
                     <button
-                      className="w-full font-body text-sm py-3.5 border border-border text-foreground hover:border-foreground/60 transition-all duration-200 tracking-wide flex items-center justify-center gap-2"
+                      className="w-full font-body text-sm py-3 md:py-3.5 border border-border text-foreground hover:border-foreground/60 transition-all duration-200 tracking-wide flex items-center justify-center gap-2"
                       style={{ borderRadius: "2px" }}
                     >
                       <ShoppingCart size={14} /> Add to cart
                     </button>
                     <button
-                      className="w-full font-body text-sm py-3.5 bg-secondary text-foreground hover:bg-secondary/80 transition-all duration-200 tracking-wide"
+                      className="w-full font-body text-sm py-3 md:py-3.5 bg-secondary text-foreground hover:bg-secondary/80 transition-all duration-200 tracking-wide"
                       style={{ borderRadius: "2px" }}
                     >
                       Buy now
                     </button>
                     <button
                       onClick={() => setStep("upload")}
-                      className="w-full font-body text-sm py-3.5 bg-terracotta text-cream hover:opacity-90 transition-all duration-200 tracking-wide flex items-center justify-center gap-2"
+                      className="w-full font-body text-sm py-3 md:py-3.5 bg-terracotta text-cream hover:opacity-90 transition-all duration-200 tracking-wide flex items-center justify-center gap-2"
                       style={{ borderRadius: "2px" }}
                     >
                       <Sparkles size={14} /> Try On
@@ -376,7 +375,7 @@ export default function TryOn() {
             </motion.div>
           )}
 
-          {/* ── STEP 3 + 4: UPLOAD + GENERATE ── */}
+          {/* ── STEP 3: UPLOAD ── */}
           {step === "upload" && selected && (
             <motion.div
               key="upload"
@@ -385,21 +384,21 @@ export default function TryOn() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="container mx-auto px-6 md:px-8 py-10"
+              className="container mx-auto px-4 md:px-8 py-6 md:py-10"
             >
               <button
                 onClick={() => { setPhoto(null); setStep("product"); }}
-                className="flex items-center gap-2 font-body text-xs text-muted-foreground hover:text-foreground transition-colors mb-8 tracking-wide uppercase"
+                className="flex items-center gap-2 font-body text-xs text-muted-foreground hover:text-foreground transition-colors mb-6 md:mb-8 tracking-wide uppercase"
               >
                 <ArrowLeft size={12} /> Back
               </button>
 
-              <div className="max-w-lg mx-auto">
-                <div className="mb-8 text-center">
-                  <p className="font-body text-xs tracking-widest text-terracotta uppercase mb-3">
+              <div className="max-w-sm md:max-w-lg mx-auto">
+                <div className="mb-6 md:mb-8 text-center">
+                  <p className="font-body text-xs tracking-widest text-terracotta uppercase mb-2 md:mb-3">
                     Step 2 of 2
                   </p>
-                  <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground">
+                  <h2 className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold text-foreground">
                     Upload your photo
                   </h2>
                   <p className="font-body text-sm text-muted-foreground mt-2">
@@ -413,7 +412,7 @@ export default function TryOn() {
                     onDragLeave={() => setDragging(false)}
                     onDrop={handleDrop}
                     onClick={() => fileRef.current?.click()}
-                    className={`border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-4 py-20 transition-all duration-200 ${
+                    className={`border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-4 py-14 md:py-20 transition-all duration-200 ${
                       dragging
                         ? "border-terracotta bg-terracotta/5"
                         : "border-border hover:border-foreground/30"
@@ -421,9 +420,9 @@ export default function TryOn() {
                     style={{ borderRadius: "2px" }}
                   >
                     <Upload size={28} className={dragging ? "text-terracotta" : "text-muted-foreground"} />
-                    <div className="text-center">
+                    <div className="text-center px-4">
                       <p className="font-body text-sm text-foreground mb-1">
-                        Drag & drop or click to upload
+                        Tap to upload your photo
                       </p>
                       <p className="font-body text-xs text-muted-foreground">JPG, PNG up to 10MB</p>
                     </div>
@@ -431,17 +430,18 @@ export default function TryOn() {
                       ref={fileRef}
                       type="file"
                       accept="image/*"
+                      capture="user"
                       className="hidden"
                       onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
                     />
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-4 md:gap-5">
                     <div
                       className="relative border border-border overflow-hidden"
                       style={{ borderRadius: "2px" }}
                     >
-                      <img src={photo} alt="Uploaded" className="w-full max-h-72 object-cover" />
+                      <img src={photo} alt="Uploaded" className="w-full max-h-64 md:max-h-72 object-cover" />
                       <button
                         onClick={() => { setPhoto(null); setPhotoFile(null); }}
                         className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm p-1.5 border border-border hover:border-foreground/40 transition-colors"
@@ -452,7 +452,7 @@ export default function TryOn() {
                     </div>
 
                     {error && (
-                      <div className="flex items-start gap-2 border border-destructive/40 bg-destructive/10 px-4 py-3" style={{ borderRadius: "2px" }}>
+                      <div className="flex items-start gap-2 border border-destructive/40 bg-destructive/10 px-3 md:px-4 py-3" style={{ borderRadius: "2px" }}>
                         <AlertCircle size={14} className="text-destructive mt-0.5 shrink-0" />
                         <p className="font-body text-xs text-destructive">{error}</p>
                       </div>
@@ -471,7 +471,7 @@ export default function TryOn() {
                         </>
                       ) : (
                         <>
-                          <Sparkles size={14} /> Generate
+                          <Sparkles size={14} /> Generate Try-On
                         </>
                       )}
                     </button>
@@ -481,7 +481,7 @@ export default function TryOn() {
             </motion.div>
           )}
 
-          {/* ── STEP 5: RESULT ── */}
+          {/* ── STEP 4: RESULT ── */}
           {step === "result" && selected && result && (
             <motion.div
               key="result"
@@ -490,20 +490,20 @@ export default function TryOn() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="container mx-auto px-6 md:px-8 py-10"
+              className="container mx-auto px-4 md:px-8 py-6 md:py-10"
             >
-              <div className="max-w-xl mx-auto">
-                <div className="mb-6 text-center">
+              <div className="max-w-sm md:max-w-xl mx-auto">
+                <div className="mb-5 md:mb-6 text-center">
                   <p className="font-body text-xs tracking-widest text-terracotta uppercase mb-2">
                     Your try-on is ready
                   </p>
-                  <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground">
+                  <h2 className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold text-foreground">
                     {selected.name}
                   </h2>
                 </div>
 
                 <div
-                  className="border border-border overflow-hidden mb-6"
+                  className="border border-border overflow-hidden mb-5 md:mb-6"
                   style={{ borderRadius: "2px" }}
                 >
                   <img src={result} alt="Try-on result" className="w-full object-cover" />
@@ -512,13 +512,13 @@ export default function TryOn() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => { setPhoto(null); setStep("upload"); }}
-                    className="font-body text-sm py-3.5 border border-border text-foreground hover:border-foreground/60 transition-all duration-200 tracking-wide flex items-center justify-center gap-2"
+                    className="font-body text-sm py-3 md:py-3.5 border border-border text-foreground hover:border-foreground/60 transition-all duration-200 tracking-wide flex items-center justify-center gap-2"
                     style={{ borderRadius: "2px" }}
                   >
                     <RefreshCw size={13} /> Try another
                   </button>
                   <button
-                    className="font-body text-sm py-3.5 bg-terracotta text-cream hover:opacity-90 transition-all duration-200 tracking-wide flex items-center justify-center gap-2"
+                    className="font-body text-sm py-3 md:py-3.5 bg-terracotta text-cream hover:opacity-90 transition-all duration-200 tracking-wide flex items-center justify-center gap-2"
                     style={{ borderRadius: "2px" }}
                   >
                     <ShoppingCart size={13} /> Add to cart
