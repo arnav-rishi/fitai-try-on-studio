@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { model_image, garment_image, category = 'tops' } = await req.json();
+    const { model_image, garment_image } = await req.json();
 
     if (!model_image || !garment_image) {
       return new Response(JSON.stringify({ error: 'Missing model_image or garment_image' }), {
@@ -36,8 +36,7 @@ Deno.serve(async (req) => {
         model_name: 'tryon-max',
         inputs: {
           model_image,
-          garment_image,
-          category,
+          product_image: garment_image,
         },
       }),
     });
