@@ -33,10 +33,12 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model_image,
-        garment_image,
-        category,
-        mode: 'tryon-max',
+        model_name: 'tryon-max',
+        inputs: {
+          model_image,
+          garment_image,
+          category,
+        },
       }),
     });
 
