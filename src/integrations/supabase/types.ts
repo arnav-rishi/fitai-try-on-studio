@@ -14,7 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      brands: {
+        Row: {
+          allowed_domains: string[] | null
+          api_key: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+          widget_theme: Json | null
+        }
+        Insert: {
+          allowed_domains?: string[] | null
+          api_key?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+          widget_theme?: Json | null
+        }
+        Update: {
+          allowed_domains?: string[] | null
+          api_key?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+          widget_theme?: Json | null
+        }
+        Relationships: []
+      }
+      tryon_logs: {
+        Row: {
+          brand_id: string
+          created_at: string
+          garment_url: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          garment_url?: string | null
+          id?: string
+          status?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          garment_url?: string | null
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tryon_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
