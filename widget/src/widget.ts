@@ -2,12 +2,13 @@
  * FitAI Embeddable Try-On Widget
  * 
  * Usage:
- * <script src="https://cdn.fitai.in/widget.js"
- *   data-brand-id="abc123"
- *   data-garment-selector=".product-img"
- *   async></script>
+ * <script src="https://cdn.fitai.in/widget.js" data-brand-id="abc123" async></script>
  * 
- * OR:
+ * Mark product images with the data-fitai-garment attribute:
+ * <img src="shirt.jpg" data-fitai-garment />
+ * <img src="pants.jpg" data-fitai-garment />
+ * 
+ * OR pass a direct URL:
  * <script src="..." data-brand-id="abc" data-garment-url="https://..." async></script>
  */
 
@@ -15,7 +16,6 @@ const SUPABASE_URL = 'https://vcjshbykllrhuodzaguf.supabase.co'
 
 interface WidgetConfig {
   brandApiKey: string
-  garmentSelector?: string
   garmentUrl?: string
   targetSelector?: string
 }
@@ -35,14 +35,12 @@ function getScriptConfig(): WidgetConfig | null {
     if (!el) return null
     return {
       brandApiKey: el.dataset.brandId || '',
-      garmentSelector: el.dataset.garmentSelector,
       garmentUrl: el.dataset.garmentUrl,
       targetSelector: el.dataset.target,
     }
   }
   return {
     brandApiKey: script.dataset.brandId || '',
-    garmentSelector: script.dataset.garmentSelector,
     garmentUrl: script.dataset.garmentUrl,
     targetSelector: script.dataset.target,
   }
@@ -299,11 +297,11 @@ class FitAIWidget {
     if (this.config.garmentUrl) {
       // Single direct URL mode — one button
       this.injectButton(this.config.garmentUrl, null)
-    } else if (this.config.garmentSelector) {
-      // Selector mode — find ALL matching images
-      const elements = document.querySelectorAll(this.config.garmentSelector)
+    } else {
+      // Auto-detect mode — find ALL images with data-fitai-garment attribute
+      const elements = document.querySelectorAll('[data-fitai-garment]')
       if (elements.length === 0) {
-        console.error('[FitAI] No elements found for selector:', this.config.garmentSelector)
+        console.error('[FitAI] No images found with data-fitai-garment attribute. Add data-fitai-garment to your product images.')
         return
       }
       elements.forEach((el) => {
@@ -313,8 +311,6 @@ class FitAIWidget {
           this.injectButton(url, imgEl)
         }
       })
-    } else {
-      console.error('[FitAI] No garment source configured. Use data-garment-selector or data-garment-url.')
     }
   }
 

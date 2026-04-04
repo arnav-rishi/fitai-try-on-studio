@@ -2,7 +2,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 
-const embedCode = `<script src="https://cdn.fitai.in/widget.js" data-brand-id="YOUR_ID" async></script>`;
+const embedCode = `<!-- Add to your product images -->
+<img src="your-product.jpg" data-fitai-garment />
+
+<!-- Add once per page -->
+<script src="https://cdn.fitai.in/widget.js" data-brand-id="YOUR_ID" async></script>`;
 
 const EmbedCode = () => {
   const [copied, setCopied] = useState(false);
@@ -57,7 +61,15 @@ const EmbedCode = () => {
 
             {/* Code */}
             <div className="px-6 py-6 text-left overflow-x-auto">
-              <code className="font-mono text-sm leading-relaxed">
+              <code className="font-mono text-sm leading-relaxed whitespace-pre">
+                <span className="text-muted-foreground">&lt;!-- Add to your product images --&gt;</span>{"\n"}
+                <span className="text-terracotta/70">&lt;img</span>{" "}
+                <span className="text-cream/60">src</span>
+                <span className="text-muted-foreground">=</span>
+                <span className="text-cream/40">"your-product.jpg"</span>{" "}
+                <span className="text-cream/60">data-fitai-garment</span>{" "}
+                <span className="text-terracotta/70">/&gt;</span>{"\n\n"}
+                <span className="text-muted-foreground">&lt;!-- Add once per page --&gt;</span>{"\n"}
                 <span className="text-terracotta/70">&lt;script</span>{" "}
                 <span className="text-cream/60">src</span>
                 <span className="text-muted-foreground">=</span>

@@ -79,10 +79,13 @@ export default function Dashboard() {
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
   const widgetUrl = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
 
-  const embedCode = `<script
+  const embedCode = `<!-- Step 1: Add data-fitai-garment to your product images -->
+<img src="your-product.jpg" data-fitai-garment />
+
+<!-- Step 2: Add the widget script (once per page) -->
+<script
   src="${widgetUrl}"
   data-brand-id="${brand.api_key}"
-  data-garment-selector=".product-image"
   async></script>`;
 
   const embedCodeUrl = `<script
@@ -137,13 +140,13 @@ export default function Dashboard() {
           </p>
         </section>
 
-        {/* Embed Code — CSS Selector */}
+        {/* Embed Code — Attribute Mode */}
         <section className="bg-card border border-border p-5 md:p-6 mb-6" style={{ borderRadius: "4px" }}>
           <h2 className="font-body text-xs tracking-widest text-muted-foreground uppercase mb-3">
-            Embed Code — CSS Selector Mode
+            Embed Code — Attribute Mode (Recommended)
           </h2>
           <p className="font-body text-sm text-muted-foreground mb-4">
-            Point <code className="text-foreground">data-garment-selector</code> to your product image's CSS selector. The widget auto-detects the garment.
+            Add <code className="text-foreground">data-fitai-garment</code> to each product image you want to enable try-on for. Review images and other images are automatically ignored.
           </p>
           <div className="relative">
             <pre className="bg-secondary p-4 font-mono text-xs text-foreground overflow-x-auto" style={{ borderRadius: "2px" }}>
@@ -214,15 +217,12 @@ export default function Dashboard() {
           <h2 className="font-body text-xs tracking-widest text-muted-foreground uppercase mb-3">
             Quick Start Guide
           </h2>
-          <ol className="font-body text-sm text-muted-foreground space-y-3 list-decimal list-inside">
-            <li>Copy the embed code above</li>
-            <li>Paste it into your product page HTML, before the closing <code className="text-foreground">&lt;/body&gt;</code> tag</li>
-            <li>
-              Set <code className="text-foreground">data-garment-selector</code> to the CSS selector of your product image
-              (e.g. <code className="text-foreground">.product-image</code>, <code className="text-foreground">#main-photo img</code>)
-            </li>
-            <li>The "Try On" button will appear automatically next to the product image</li>
-            <li>Shoppers click it, upload their photo, and see the AI try-on result</li>
+            <ol className="font-body text-sm text-muted-foreground space-y-3 list-decimal list-inside">
+            <li>Add <code className="text-foreground">data-fitai-garment</code> to each product image you want try-on on: <code className="text-foreground">&lt;img src="..." data-fitai-garment /&gt;</code></li>
+            <li>Copy the embed script above and paste it before the closing <code className="text-foreground">&lt;/body&gt;</code> tag</li>
+            <li>The "Try On" button will appear automatically next to each marked product image</li>
+            <li>Review images, thumbnails, and other images are completely ignored</li>
+            <li>Shoppers click the button, upload their photo, and see the AI try-on result</li>
           </ol>
         </section>
       </main>
