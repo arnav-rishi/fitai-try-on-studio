@@ -48,16 +48,7 @@ function getScriptConfig(): WidgetConfig | null {
   }
 }
 
-function getGarmentImageUrl(config: WidgetConfig): string | null {
-  if (config.garmentUrl) return config.garmentUrl
-  if (config.garmentSelector) {
-    const el = document.querySelector(config.garmentSelector) as HTMLImageElement | null
-    if (el) {
-      return el.src || el.getAttribute('data-src') || null
-    }
-  }
-  return null
-}
+// getGarmentImageUrl removed — widget now handles multiple images via querySelectorAll
 
 function createStyles(): string {
   return `
