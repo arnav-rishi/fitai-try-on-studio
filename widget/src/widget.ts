@@ -523,7 +523,7 @@ class FitAIWidget {
         if (statusData.status === 'completed') {
           const outputUrl = statusData.output?.[0]
           if (!outputUrl) throw new Error('No output URL')
-          this.renderResult(container, primary, outputUrl, overlay, modalHost)
+          this.renderResult(container, primary, outputUrl, overlay, modalHost, garmentUrl)
           return
         }
 
