@@ -327,37 +327,40 @@ class FitAIWidget {
     }
   }
 
-  private injectButton() {
+  private injectButton(garmentUrl: string, anchorEl: HTMLElement | null) {
     const primary = this.theme.primaryColor || '#c4653a'
+    const host = document.createElement('div')
+    host.className = 'fitai-widget-host'
+    const shadow = host.attachShadow({ mode: 'closed' })
+
+    const style = document.createElement('style')
+    style.textContent = createStyles()
+    shadow.appendChild(style)
+
     const btn = document.createElement('button')
     btn.className = 'fitai-btn'
     btn.style.cssText = `background:${primary};color:#fff;`
     btn.innerHTML = this.theme.buttonText || '✨ Try On'
-    btn.addEventListener('click', () => this.openModal())
+    btn.addEventListener('click', () => this.openModal(garmentUrl))
+    shadow.appendChild(btn)
 
     // Insert the button
     if (this.config.targetSelector) {
       const target = document.querySelector(this.config.targetSelector)
       if (target) {
-        target.appendChild(this.host)
-        this.shadow.appendChild(btn)
+        target.appendChild(host)
         return
       }
     }
 
-    // Fallback: insert after the garment image
-    if (this.config.garmentSelector) {
-      const garmentEl = document.querySelector(this.config.garmentSelector)
-      if (garmentEl && garmentEl.parentElement) {
-        garmentEl.parentElement.insertBefore(this.host, garmentEl.nextSibling)
-        this.shadow.appendChild(btn)
-        return
-      }
+    // Insert after the anchor element (the garment image)
+    if (anchorEl && anchorEl.parentElement) {
+      anchorEl.parentElement.insertBefore(host, anchorEl.nextSibling)
+      return
     }
 
-    // Last fallback: append to body
-    document.body.appendChild(this.host)
-    this.shadow.appendChild(btn)
+    // Last fallback
+    document.body.appendChild(host)
   }
 
   private openModal() {
