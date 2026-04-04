@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import type { Transition } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroFashion from "@/assets/hero-fashion.jpg";
 
 const fadeUp = (delay = 0) => ({
@@ -10,6 +11,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 const Hero = () => {
+  const navigate = useNavigate();
   const stats = [
     { value: "40%", label: "fewer returns" },
     { value: "2×", label: "add-to-cart rate" },
@@ -54,7 +56,7 @@ const Hero = () => {
               <button
                 className="font-body text-sm border border-border text-cream px-7 py-3.5 hover:border-terracotta/60 hover:text-terracotta transition-all duration-200 tracking-wide"
                 style={{ borderRadius: "2px" }}
-                onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => navigate("/tryon")}
               >
                 See how it works
               </button>
