@@ -56,7 +56,7 @@ const Hero = () => {
               <button
                 className="font-body text-sm border border-border text-cream px-7 py-3.5 hover:border-terracotta/60 hover:text-terracotta transition-all duration-200 tracking-wide"
                 style={{ borderRadius: "2px" }}
-                onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => navigate("/tryon")}
               >
                 See how it works
               </button>
