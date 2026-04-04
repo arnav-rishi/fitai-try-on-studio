@@ -8,33 +8,38 @@
     body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
     .products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
     .product-card { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
-    .product-card .product-img { width: 100%; height: 300px; object-fit: cover; }
+    .product-card img { width: 100%; height: 300px; object-fit: cover; }
     .product-card .info { padding: 16px; }
     .product-card h3 { margin: 0 0 4px; }
     .product-card .price { color: #c4653a; font-size: 18px; }
+    .review { margin-top: 32px; padding: 16px; border: 1px solid #eee; border-radius: 8px; }
+    .review img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; }
   </style>
 </head>
 <body>
   <h1>Demo Store — Multiple Products</h1>
-  <p>Each product image gets its own "Try On" button automatically.</p>
+  <p>Only images with <code>data-fitai-garment</code> get a "Try On" button. Review images are ignored.</p>
 
   <div class="products">
     <div class="product-card">
-      <img class="product-img" src="https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400" alt="Shirt 1">
+      <!-- ✅ Product image — has data-fitai-garment -->
+      <img data-fitai-garment src="https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400" alt="Shirt 1">
       <div class="info">
         <h3>Summer Linen Shirt</h3>
         <div class="price">₹2,490</div>
       </div>
     </div>
     <div class="product-card">
-      <img class="product-img" src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400" alt="Shirt 2">
+      <!-- ✅ Product image — has data-fitai-garment -->
+      <img data-fitai-garment src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400" alt="Shirt 2">
       <div class="info">
         <h3>Classic Oxford</h3>
         <div class="price">₹3,190</div>
       </div>
     </div>
     <div class="product-card">
-      <img class="product-img" src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400" alt="Shirt 3">
+      <!-- ✅ Product image — has data-fitai-garment -->
+      <img data-fitai-garment src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400" alt="Shirt 3">
       <div class="info">
         <h3>Casual Flannel</h3>
         <div class="price">₹2,890</div>
@@ -42,11 +47,18 @@
     </div>
   </div>
 
-  <!-- Single script tag — handles ALL .product-img elements -->
+  <!-- ❌ Review images — NO data-fitai-garment, so no button injected -->
+  <div class="review">
+    <h3>Customer Reviews</h3>
+    <p>⭐⭐⭐⭐⭐ "Great shirt!"</p>
+    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200" alt="Review photo">
+    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" alt="Review photo 2">
+  </div>
+
+  <!-- Single script tag — automatically finds all data-fitai-garment images -->
   <script 
     src="./dist/widget.js" 
     data-brand-id="YOUR_BRAND_API_KEY_HERE"
-    data-garment-selector=".product-img"
     async>
   </script>
 </body>

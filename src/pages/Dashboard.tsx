@@ -217,15 +217,12 @@ export default function Dashboard() {
           <h2 className="font-body text-xs tracking-widest text-muted-foreground uppercase mb-3">
             Quick Start Guide
           </h2>
-          <ol className="font-body text-sm text-muted-foreground space-y-3 list-decimal list-inside">
-            <li>Copy the embed code above</li>
-            <li>Paste it into your product page HTML, before the closing <code className="text-foreground">&lt;/body&gt;</code> tag</li>
-            <li>
-              Set <code className="text-foreground">data-garment-selector</code> to the CSS selector of your product image
-              (e.g. <code className="text-foreground">.product-image</code>, <code className="text-foreground">#main-photo img</code>)
-            </li>
-            <li>The "Try On" button will appear automatically next to the product image</li>
-            <li>Shoppers click it, upload their photo, and see the AI try-on result</li>
+            <ol className="font-body text-sm text-muted-foreground space-y-3 list-decimal list-inside">
+            <li>Add <code className="text-foreground">data-fitai-garment</code> to each product image you want try-on on: <code className="text-foreground">&lt;img src="..." data-fitai-garment /&gt;</code></li>
+            <li>Copy the embed script above and paste it before the closing <code className="text-foreground">&lt;/body&gt;</code> tag</li>
+            <li>The "Try On" button will appear automatically next to each marked product image</li>
+            <li>Review images, thumbnails, and other images are completely ignored</li>
+            <li>Shoppers click the button, upload their photo, and see the AI try-on result</li>
           </ol>
         </section>
       </main>
