@@ -272,22 +272,11 @@ async function toDataUri(url: string, maxDim = 1024): Promise<string> {
 
 class FitAIWidget {
   private config: WidgetConfig
-  private shadow: ShadowRoot
-  private host: HTMLElement
   private theme: BrandTheme = { primaryColor: '#c4653a', buttonText: '✨ Try On', position: 'inline' }
   private brandId: string | null = null
-  private garmentUrl: string | null = null
 
   constructor(config: WidgetConfig) {
     this.config = config
-    this.host = document.createElement('div')
-    this.host.id = 'fitai-widget-host'
-    this.shadow = this.host.attachShadow({ mode: 'closed' })
-
-    // Inject styles
-    const style = document.createElement('style')
-    style.textContent = createStyles()
-    this.shadow.appendChild(style)
   }
 
   async init() {
@@ -315,15 +304,27 @@ class FitAIWidget {
       return
     }
 
-    // 2. Get garment image
-    this.garmentUrl = getGarmentImageUrl(this.config)
-    if (!this.garmentUrl) {
-      console.error('[FitAI] Could not find garment image. Check data-garment-selector or data-garment-url.')
-      return
+    // 2. Find garment images and inject buttons
+    if (this.config.garmentUrl) {
+      // Single direct URL mode — one button
+      this.injectButton(this.config.garmentUrl, null)
+    } else if (this.config.garmentSelector) {
+      // Selector mode — find ALL matching images
+      const elements = document.querySelectorAll(this.config.garmentSelector)
+      if (elements.length === 0) {
+        console.error('[FitAI] No elements found for selector:', this.config.garmentSelector)
+        return
+      }
+      elements.forEach((el) => {
+        const imgEl = el as HTMLImageElement
+        const url = imgEl.src || imgEl.getAttribute('data-src') || null
+        if (url) {
+          this.injectButton(url, imgEl)
+        }
+      })
+    } else {
+      console.error('[FitAI] No garment source configured. Use data-garment-selector or data-garment-url.')
     }
-
-    // 3. Inject try-on button
-    this.injectButton()
   }
 
   private injectButton() {
