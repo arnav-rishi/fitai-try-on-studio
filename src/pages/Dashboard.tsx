@@ -79,10 +79,13 @@ export default function Dashboard() {
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
   const widgetUrl = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
 
-  const embedCode = `<script
+  const embedCode = `<!-- Step 1: Add data-fitai-garment to your product images -->
+<img src="your-product.jpg" data-fitai-garment />
+
+<!-- Step 2: Add the widget script (once per page) -->
+<script
   src="${widgetUrl}"
   data-brand-id="${brand.api_key}"
-  data-garment-selector=".product-image"
   async></script>`;
 
   const embedCodeUrl = `<script
