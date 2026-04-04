@@ -363,7 +363,7 @@ class FitAIWidget {
     document.body.appendChild(host)
   }
 
-  private openModal() {
+  private openModal(garmentUrl: string) {
     const primary = this.theme.primaryColor || '#c4653a'
     const overlay = document.createElement('div')
     overlay.className = 'fitai-overlay'
@@ -377,7 +377,6 @@ class FitAIWidget {
 
     overlay.appendChild(modal)
 
-    // Need a separate shadow root for the modal
     const modalHost = document.createElement('div')
     modalHost.style.cssText = 'position:fixed;inset:0;z-index:999999;'
     const modalShadow = modalHost.attachShadow({ mode: 'closed' })
@@ -387,12 +386,10 @@ class FitAIWidget {
 
     requestAnimationFrame(() => overlay.classList.add('active'))
 
-    this.renderUploadStep(modal, overlay, modalHost, primary)
+    this.renderUploadStep(modal, overlay, modalHost, primary, garmentUrl)
   }
 
-  private renderUploadStep(modal: HTMLElement, overlay: HTMLElement, modalHost: HTMLElement, primary: string) {
-    let photoDataUri: string | null = null
-
+  private renderUploadStep(modal: HTMLElement, overlay: HTMLElement, modalHost: HTMLElement, primary: string, garmentUrl: string) {
     modal.innerHTML = `
       <button class="fitai-close">&times;</button>
       <div class="fitai-title">Virtual Try-On</div>
@@ -409,8 +406,7 @@ class FitAIWidget {
 
     const content = modal.querySelector('#fitai-content')!
     this.renderDropzone(content as HTMLElement, primary, (dataUri) => {
-      photoDataUri = dataUri
-      this.renderPhotoPreview(content as HTMLElement, primary, dataUri, overlay, modalHost)
+      this.renderPhotoPreview(content as HTMLElement, primary, dataUri, overlay, modalHost, garmentUrl)
     })
   }
 
