@@ -16,7 +16,6 @@ const SUPABASE_URL = 'https://vcjshbykllrhuodzaguf.supabase.co'
 
 interface WidgetConfig {
   brandApiKey: string
-  garmentSelector?: string
   garmentUrl?: string
   targetSelector?: string
 }
