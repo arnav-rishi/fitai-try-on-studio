@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import type { Transition } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroFashion from "@/assets/hero-fashion.jpg";
 
 const fadeUp = (delay = 0) => ({
