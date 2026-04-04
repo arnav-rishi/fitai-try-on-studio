@@ -11,6 +11,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 const Hero = () => {
+  const navigate = useNavigate();
   const stats = [
     { value: "40%", label: "fewer returns" },
     { value: "2×", label: "add-to-cart rate" },
