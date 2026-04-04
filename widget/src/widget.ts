@@ -2,12 +2,13 @@
  * FitAI Embeddable Try-On Widget
  * 
  * Usage:
- * <script src="https://cdn.fitai.in/widget.js"
- *   data-brand-id="abc123"
- *   data-garment-selector=".product-img"
- *   async></script>
+ * <script src="https://cdn.fitai.in/widget.js" data-brand-id="abc123" async></script>
  * 
- * OR:
+ * Mark product images with the data-fitai-garment attribute:
+ * <img src="shirt.jpg" data-fitai-garment />
+ * <img src="pants.jpg" data-fitai-garment />
+ * 
+ * OR pass a direct URL:
  * <script src="..." data-brand-id="abc" data-garment-url="https://..." async></script>
  */
 
