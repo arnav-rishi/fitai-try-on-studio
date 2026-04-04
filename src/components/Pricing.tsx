@@ -82,12 +82,21 @@ const Pricing = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.12, duration: 0.6 }}
-              className={`relative flex flex-col p-8 border transition-all duration-300 ${
+              className={`relative flex flex-col p-8 transition-all duration-300 ${
                 plan.featured
-                  ? "bg-surface border-terracotta animate-pulse-glow"
-                  : "bg-surface border-border hover:border-border/80"
+                  ? "bg-surface border-0"
+                  : "bg-surface border border-border hover:border-border/80"
               }`}
-              style={{ borderRadius: "2px" }}
+              style={{
+                borderRadius: "2px",
+                ...(plan.featured
+                  ? {
+                      background:
+                        "linear-gradient(hsl(var(--surface)), hsl(var(--surface))) padding-box, linear-gradient(135deg, hsl(18 64% 47%), hsl(40 60% 97% / 0.3), hsl(18 64% 47%)) border-box",
+                      border: "1.5px solid transparent",
+                    }
+                  : {}),
+              }}
             >
               {plan.featured && (
                 <div className="absolute -top-3 left-8">
