@@ -297,11 +297,11 @@ class FitAIWidget {
     if (this.config.garmentUrl) {
       // Single direct URL mode — one button
       this.injectButton(this.config.garmentUrl, null)
-    } else if (this.config.garmentSelector) {
-      // Selector mode — find ALL matching images
-      const elements = document.querySelectorAll(this.config.garmentSelector)
+    } else {
+      // Auto-detect mode — find ALL images with data-fitai-garment attribute
+      const elements = document.querySelectorAll('[data-fitai-garment]')
       if (elements.length === 0) {
-        console.error('[FitAI] No elements found for selector:', this.config.garmentSelector)
+        console.error('[FitAI] No images found with data-fitai-garment attribute. Add data-fitai-garment to your product images.')
         return
       }
       elements.forEach((el) => {
@@ -311,8 +311,6 @@ class FitAIWidget {
           this.injectButton(url, imgEl)
         }
       })
-    } else {
-      console.error('[FitAI] No garment source configured. Use data-garment-selector or data-garment-url.')
     }
   }
 
