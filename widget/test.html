@@ -3,33 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FitAI Widget Test Page</title>
+  <title>FitAI Widget Test — Multiple Products</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
-    .product-image { width: 400px; border-radius: 8px; }
-    h1 { margin-bottom: 8px; }
-    .price { font-size: 24px; color: #c4653a; margin-bottom: 16px; }
-    .button-area { margin-top: 16px; }
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
+    .products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .product-card { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+    .product-card .product-img { width: 100%; height: 300px; object-fit: cover; }
+    .product-card .info { padding: 16px; }
+    .product-card h3 { margin: 0 0 4px; }
+    .product-card .price { color: #c4653a; font-size: 18px; }
   </style>
 </head>
 <body>
-  <h1>Demo Product Page</h1>
-  <p class="price">₹3,490</p>
-  
-  <img class="product-image" 
-       src="https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=600" 
-       alt="Product">
-  
-  <div class="button-area" id="tryon-buttons">
-    <!-- Widget button will be injected here -->
+  <h1>Demo Store — Multiple Products</h1>
+  <p>Each product image gets its own "Try On" button automatically.</p>
+
+  <div class="products">
+    <div class="product-card">
+      <img class="product-img" src="https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400" alt="Shirt 1">
+      <div class="info">
+        <h3>Summer Linen Shirt</h3>
+        <div class="price">₹2,490</div>
+      </div>
+    </div>
+    <div class="product-card">
+      <img class="product-img" src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400" alt="Shirt 2">
+      <div class="info">
+        <h3>Classic Oxford</h3>
+        <div class="price">₹3,190</div>
+      </div>
+    </div>
+    <div class="product-card">
+      <img class="product-img" src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400" alt="Shirt 3">
+      <div class="info">
+        <h3>Casual Flannel</h3>
+        <div class="price">₹2,890</div>
+      </div>
+    </div>
   </div>
 
-  <!-- FitAI Widget Embed -->
+  <!-- Single script tag — handles ALL .product-img elements -->
   <script 
     src="./dist/widget.js" 
     data-brand-id="YOUR_BRAND_API_KEY_HERE"
-    data-garment-selector=".product-image"
-    data-target="#tryon-buttons"
+    data-garment-selector=".product-img"
     async>
   </script>
 </body>
