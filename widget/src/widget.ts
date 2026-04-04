@@ -543,7 +543,7 @@ class FitAIWidget {
       const retry = container.querySelector('#fitai-retry')!
       retry.addEventListener('click', () => {
         this.renderDropzone(container, primary, (dataUri) => {
-          this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost)
+          this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl)
         })
       })
     }
