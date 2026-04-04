@@ -451,7 +451,7 @@ class FitAIWidget {
     }
   }
 
-  private renderPhotoPreview(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement) {
+  private renderPhotoPreview(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string) {
     container.innerHTML = `
       <img class="fitai-preview" src="${photoDataUri}" alt="Your photo">
       <div id="fitai-error-container"></div>
@@ -466,13 +466,13 @@ class FitAIWidget {
     const retake = container.querySelector('#fitai-retake')!
     retake.addEventListener('click', () => {
       this.renderDropzone(container, primary, (dataUri) => {
-        this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost)
+        this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl)
       })
     })
 
     const generateBtn = container.querySelector('#fitai-generate') as HTMLButtonElement
     generateBtn.addEventListener('click', () => {
-      this.runTryOn(container, primary, photoDataUri, overlay, modalHost)
+      this.runTryOn(container, primary, photoDataUri, overlay, modalHost, garmentUrl)
     })
   }
 
