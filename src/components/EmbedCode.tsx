@@ -2,7 +2,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 
-const embedCode = `<script src="https://cdn.fitai.in/widget.js" data-brand-id="YOUR_ID" async></script>`;
+const embedCode = `<!-- Add to your product images -->
+<img src="your-product.jpg" data-fitai-garment />
+
+<!-- Add once per page -->
+<script src="https://cdn.fitai.in/widget.js" data-brand-id="YOUR_ID" async></script>`;
 
 const EmbedCode = () => {
   const [copied, setCopied] = useState(false);
