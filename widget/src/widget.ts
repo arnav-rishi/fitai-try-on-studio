@@ -476,7 +476,7 @@ class FitAIWidget {
     })
   }
 
-  private async runTryOn(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement) {
+  private async runTryOn(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string) {
     container.innerHTML = `
       <div class="fitai-loading">
         <div class="fitai-spinner"></div>
@@ -486,13 +486,12 @@ class FitAIWidget {
     const statusEl = container.querySelector('#fitai-status')!
 
     try {
-      // Start the job — send garment as URL so edge function fetches it server-side
       const runRes = await fetch(`${SUPABASE_URL}/functions/v1/fashn-run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model_image: photoDataUri,
-          garment_url: this.garmentUrl,
+          garment_url: garmentUrl,
           category: 'auto',
           brand_api_key: this.config.brandApiKey,
         }),
