@@ -18,6 +18,7 @@ interface WidgetConfig {
   brandApiKey: string
   garmentUrl?: string
   targetSelector?: string
+  category?: string
 }
 
 interface BrandTheme {
