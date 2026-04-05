@@ -296,7 +296,7 @@ class FitAIWidget {
     // 2. Find garment images and inject buttons
     if (this.config.garmentUrl) {
       // Single direct URL mode — one button
-      this.injectButton(this.config.garmentUrl, null)
+      this.injectButton(this.config.garmentUrl, null, this.config.category || 'auto')
     } else {
       // Auto-detect mode — find ALL images with data-fitai-garment attribute
       const elements = document.querySelectorAll('[data-fitai-garment]')
