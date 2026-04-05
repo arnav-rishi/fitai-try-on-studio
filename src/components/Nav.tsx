@@ -65,7 +65,7 @@ const Nav = () => {
           className="font-body text-sm bg-terracotta text-cream px-5 py-2.5 border border-terracotta hover:bg-transparent hover:text-terracotta transition-all duration-200 tracking-wide"
           style={{ borderRadius: "2px" }}
         >
-          Get started free
+          Try for free
         </button>
       </div>
     </motion.nav>

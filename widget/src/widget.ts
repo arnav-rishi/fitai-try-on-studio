@@ -18,6 +18,7 @@ interface WidgetConfig {
   brandApiKey: string
   garmentUrl?: string
   targetSelector?: string
+  category?: string
 }
 
 interface BrandTheme {
@@ -37,12 +38,14 @@ function getScriptConfig(): WidgetConfig | null {
       brandApiKey: el.dataset.brandId || '',
       garmentUrl: el.dataset.garmentUrl,
       targetSelector: el.dataset.target,
+      category: el.dataset.category,
     }
   }
   return {
     brandApiKey: script.dataset.brandId || '',
     garmentUrl: script.dataset.garmentUrl,
     targetSelector: script.dataset.target,
+    category: script.dataset.category,
   }
 }
 
@@ -296,7 +299,7 @@ class FitAIWidget {
     // 2. Find garment images and inject buttons
     if (this.config.garmentUrl) {
       // Single direct URL mode — one button
-      this.injectButton(this.config.garmentUrl, null)
+      this.injectButton(this.config.garmentUrl, null, this.config.category || 'auto')
     } else {
       // Auto-detect mode — find ALL images with data-fitai-garment attribute
       const elements = document.querySelectorAll('[data-fitai-garment]')
@@ -307,14 +310,15 @@ class FitAIWidget {
       elements.forEach((el) => {
         const imgEl = el as HTMLImageElement
         const url = imgEl.src || imgEl.getAttribute('data-src') || null
+        const category = imgEl.getAttribute('data-fitai-category') || 'auto'
         if (url) {
-          this.injectButton(url, imgEl)
+          this.injectButton(url, imgEl, category)
         }
       })
     }
   }
 
-  private injectButton(garmentUrl: string, anchorEl: HTMLElement | null) {
+  private injectButton(garmentUrl: string, anchorEl: HTMLElement | null, category: string) {
     const primary = this.theme.primaryColor || '#c4653a'
     const host = document.createElement('div')
     host.className = 'fitai-widget-host'
@@ -328,7 +332,7 @@ class FitAIWidget {
     btn.className = 'fitai-btn'
     btn.style.cssText = `background:${primary};color:#fff;`
     btn.innerHTML = this.theme.buttonText || '✨ Try On'
-    btn.addEventListener('click', () => this.openModal(garmentUrl))
+    btn.addEventListener('click', () => this.openModal(garmentUrl, category))
     shadow.appendChild(btn)
 
     // Insert the button
@@ -350,7 +354,7 @@ class FitAIWidget {
     document.body.appendChild(host)
   }
 
-  private openModal(garmentUrl: string) {
+  private openModal(garmentUrl: string, category: string) {
     const primary = this.theme.primaryColor || '#c4653a'
     const overlay = document.createElement('div')
     overlay.className = 'fitai-overlay'
@@ -373,10 +377,10 @@ class FitAIWidget {
 
     requestAnimationFrame(() => overlay.classList.add('active'))
 
-    this.renderUploadStep(modal, overlay, modalHost, primary, garmentUrl)
+    this.renderUploadStep(modal, overlay, modalHost, primary, garmentUrl, category)
   }
 
-  private renderUploadStep(modal: HTMLElement, overlay: HTMLElement, modalHost: HTMLElement, primary: string, garmentUrl: string) {
+  private renderUploadStep(modal: HTMLElement, overlay: HTMLElement, modalHost: HTMLElement, primary: string, garmentUrl: string, category: string) {
     modal.innerHTML = `
       <button class="fitai-close">&times;</button>
       <div class="fitai-title">Virtual Try-On</div>
@@ -393,7 +397,7 @@ class FitAIWidget {
 
     const content = modal.querySelector('#fitai-content')!
     this.renderDropzone(content as HTMLElement, primary, (dataUri) => {
-      this.renderPhotoPreview(content as HTMLElement, primary, dataUri, overlay, modalHost, garmentUrl)
+      this.renderPhotoPreview(content as HTMLElement, primary, dataUri, overlay, modalHost, garmentUrl, category)
     })
   }
 
@@ -403,7 +407,7 @@ class FitAIWidget {
         <div class="fitai-dropzone-icon">📷</div>
         <div class="fitai-dropzone-text">Tap to upload your photo</div>
         <div class="fitai-dropzone-hint">JPG, PNG up to 10MB</div>
-        <input type="file" accept="image/*" capture="user" style="display:none" id="fitai-file">
+        <input type="file" accept="image/*" style="display:none" id="fitai-file">
       </div>
     `
 
@@ -438,7 +442,7 @@ class FitAIWidget {
     }
   }
 
-  private renderPhotoPreview(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string) {
+  private renderPhotoPreview(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string, category: string) {
     container.innerHTML = `
       <img class="fitai-preview" src="${photoDataUri}" alt="Your photo">
       <div id="fitai-error-container"></div>
@@ -453,17 +457,17 @@ class FitAIWidget {
     const retake = container.querySelector('#fitai-retake')!
     retake.addEventListener('click', () => {
       this.renderDropzone(container, primary, (dataUri) => {
-        this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl)
+        this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl, category)
       })
     })
 
     const generateBtn = container.querySelector('#fitai-generate') as HTMLButtonElement
     generateBtn.addEventListener('click', () => {
-      this.runTryOn(container, primary, photoDataUri, overlay, modalHost, garmentUrl)
+      this.runTryOn(container, primary, photoDataUri, overlay, modalHost, garmentUrl, category)
     })
   }
 
-  private async runTryOn(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string) {
+  private async runTryOn(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string, category: string) {
     container.innerHTML = `
       <div class="fitai-loading">
         <div class="fitai-spinner"></div>
@@ -479,7 +483,7 @@ class FitAIWidget {
         body: JSON.stringify({
           model_image: photoDataUri,
           garment_url: garmentUrl,
-          category: 'auto',
+          category,
           brand_api_key: this.config.brandApiKey,
         }),
       })
@@ -510,7 +514,7 @@ class FitAIWidget {
         if (statusData.status === 'completed') {
           const outputUrl = statusData.output?.[0]
           if (!outputUrl) throw new Error('No output URL')
-          this.renderResult(container, primary, outputUrl, overlay, modalHost, garmentUrl)
+          this.renderResult(container, primary, outputUrl, overlay, modalHost, garmentUrl, category)
           return
         }
 
@@ -530,13 +534,13 @@ class FitAIWidget {
       const retry = container.querySelector('#fitai-retry')!
       retry.addEventListener('click', () => {
         this.renderDropzone(container, primary, (dataUri) => {
-          this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl)
+          this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl, category)
         })
       })
     }
   }
 
-  private renderResult(container: HTMLElement, primary: string, outputUrl: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string) {
+  private renderResult(container: HTMLElement, primary: string, outputUrl: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string, category: string) {
     container.innerHTML = `
       <img class="fitai-result-img" src="${outputUrl}" alt="Try-on result">
       <div class="fitai-actions">
@@ -548,7 +552,7 @@ class FitAIWidget {
     const tryAgain = container.querySelector('#fitai-tryagain')!
     tryAgain.addEventListener('click', () => {
       this.renderDropzone(container, primary, (dataUri) => {
-        this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl)
+        this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl, category)
       })
     })
 

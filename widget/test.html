@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FitAI Widget Test — Multiple Products</title>
+  <title>FitAI Widget Test — Multiple Products with Categories</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
     .products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
@@ -12,37 +12,41 @@
     .product-card .info { padding: 16px; }
     .product-card h3 { margin: 0 0 4px; }
     .product-card .price { color: #c4653a; font-size: 18px; }
+    .category-tag { display: inline-block; background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 12px; color: #666; margin-top: 4px; }
     .review { margin-top: 32px; padding: 16px; border: 1px solid #eee; border-radius: 8px; }
     .review img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <h1>Demo Store — Multiple Products</h1>
-  <p>Only images with <code>data-fitai-garment</code> get a "Try On" button. Review images are ignored.</p>
+  <h1>Demo Store — Products with Categories</h1>
+  <p>Images with <code>data-fitai-garment</code> get a "Try On" button. Use <code>data-fitai-category</code> to specify the garment type (tops, bottoms, one-pieces).</p>
 
   <div class="products">
     <div class="product-card">
-      <!-- ✅ Product image — has data-fitai-garment -->
-      <img data-fitai-garment src="https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400" alt="Shirt 1">
+      <!-- ✅ Top -->
+      <img data-fitai-garment data-fitai-category="tops" src="https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400" alt="Shirt 1">
       <div class="info">
         <h3>Summer Linen Shirt</h3>
         <div class="price">₹2,490</div>
+        <div class="category-tag">tops</div>
       </div>
     </div>
     <div class="product-card">
-      <!-- ✅ Product image — has data-fitai-garment -->
-      <img data-fitai-garment src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400" alt="Shirt 2">
+      <!-- ✅ Top -->
+      <img data-fitai-garment data-fitai-category="tops" src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400" alt="Shirt 2">
       <div class="info">
         <h3>Classic Oxford</h3>
         <div class="price">₹3,190</div>
+        <div class="category-tag">tops</div>
       </div>
     </div>
     <div class="product-card">
-      <!-- ✅ Product image — has data-fitai-garment -->
-      <img data-fitai-garment src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400" alt="Shirt 3">
+      <!-- ✅ One-piece (no category = auto-detect) -->
+      <img data-fitai-garment src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400" alt="Dress">
       <div class="info">
         <h3>Casual Flannel</h3>
         <div class="price">₹2,890</div>
+        <div class="category-tag">auto</div>
       </div>
     </div>
   </div>

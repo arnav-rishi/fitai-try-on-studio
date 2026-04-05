@@ -80,7 +80,8 @@ export default function Dashboard() {
   const widgetUrl = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
 
   const embedCode = `<!-- Step 1: Add data-fitai-garment to your product images -->
-<img src="your-product.jpg" data-fitai-garment />
+<!-- Use data-fitai-category to specify: tops, bottoms, one-pieces (or omit for auto-detect) -->
+<img src="your-product.jpg" data-fitai-garment data-fitai-category="tops" />
 
 <!-- Step 2: Add the widget script (once per page) -->
 <script
@@ -218,10 +219,10 @@ export default function Dashboard() {
             Quick Start Guide
           </h2>
             <ol className="font-body text-sm text-muted-foreground space-y-3 list-decimal list-inside">
-            <li>Add <code className="text-foreground">data-fitai-garment</code> to each product image you want try-on on: <code className="text-foreground">&lt;img src="..." data-fitai-garment /&gt;</code></li>
+            <li>Add <code className="text-foreground">data-fitai-garment</code> to each product image, and optionally <code className="text-foreground">data-fitai-category="tops"</code> (tops, bottoms, or one-pieces): <code className="text-foreground">&lt;img src="..." data-fitai-garment data-fitai-category="tops" /&gt;</code></li>
             <li>Copy the embed script above and paste it before the closing <code className="text-foreground">&lt;/body&gt;</code> tag</li>
             <li>The "Try On" button will appear automatically next to each marked product image</li>
-            <li>Review images, thumbnails, and other images are completely ignored</li>
+            <li>The category tells the AI exactly what type of garment it is for best results</li>
             <li>Shoppers click the button, upload their photo, and see the AI try-on result</li>
           </ol>
         </section>

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 
 const embedCode = `<!-- Add to your product images -->
-<img src="your-product.jpg" data-fitai-garment />
+<img src="your-product.jpg" data-fitai-garment data-fitai-category="tops" />
 
 <!-- Add once per page -->
 <script src="https://cdn.fitai.in/widget.js" data-brand-id="YOUR_ID" async></script>`;
@@ -68,6 +68,9 @@ const EmbedCode = () => {
                 <span className="text-muted-foreground">=</span>
                 <span className="text-cream/40">"your-product.jpg"</span>{" "}
                 <span className="text-cream/60">data-fitai-garment</span>{" "}
+                <span className="text-cream/60">data-fitai-category</span>
+                <span className="text-muted-foreground">=</span>
+                <span className="text-cream/40">"tops"</span>{" "}
                 <span className="text-terracotta/70">/&gt;</span>{"\n\n"}
                 <span className="text-muted-foreground">&lt;!-- Add once per page --&gt;</span>{"\n"}
                 <span className="text-terracotta/70">&lt;script</span>{" "}
