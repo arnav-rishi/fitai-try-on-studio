@@ -354,7 +354,7 @@ class FitAIWidget {
     document.body.appendChild(host)
   }
 
-  private openModal(garmentUrl: string) {
+  private openModal(garmentUrl: string, category: string) {
     const primary = this.theme.primaryColor || '#c4653a'
     const overlay = document.createElement('div')
     overlay.className = 'fitai-overlay'
@@ -377,7 +377,7 @@ class FitAIWidget {
 
     requestAnimationFrame(() => overlay.classList.add('active'))
 
-    this.renderUploadStep(modal, overlay, modalHost, primary, garmentUrl)
+    this.renderUploadStep(modal, overlay, modalHost, primary, garmentUrl, category)
   }
 
   private renderUploadStep(modal: HTMLElement, overlay: HTMLElement, modalHost: HTMLElement, primary: string, garmentUrl: string) {
