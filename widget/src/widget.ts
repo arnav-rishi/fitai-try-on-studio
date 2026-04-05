@@ -318,7 +318,7 @@ class FitAIWidget {
     }
   }
 
-  private injectButton(garmentUrl: string, anchorEl: HTMLElement | null) {
+  private injectButton(garmentUrl: string, anchorEl: HTMLElement | null, category: string) {
     const primary = this.theme.primaryColor || '#c4653a'
     const host = document.createElement('div')
     host.className = 'fitai-widget-host'
@@ -332,7 +332,7 @@ class FitAIWidget {
     btn.className = 'fitai-btn'
     btn.style.cssText = `background:${primary};color:#fff;`
     btn.innerHTML = this.theme.buttonText || '✨ Try On'
-    btn.addEventListener('click', () => this.openModal(garmentUrl))
+    btn.addEventListener('click', () => this.openModal(garmentUrl, category))
     shadow.appendChild(btn)
 
     // Insert the button
