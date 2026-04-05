@@ -407,7 +407,7 @@ class FitAIWidget {
         <div class="fitai-dropzone-icon">📷</div>
         <div class="fitai-dropzone-text">Tap to upload your photo</div>
         <div class="fitai-dropzone-hint">JPG, PNG up to 10MB</div>
-        <input type="file" accept="image/*" capture="user" style="display:none" id="fitai-file">
+        <input type="file" accept="image/*" style="display:none" id="fitai-file">
       </div>
     `
 
