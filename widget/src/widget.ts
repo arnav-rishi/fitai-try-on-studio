@@ -380,7 +380,7 @@ class FitAIWidget {
     this.renderUploadStep(modal, overlay, modalHost, primary, garmentUrl, category)
   }
 
-  private renderUploadStep(modal: HTMLElement, overlay: HTMLElement, modalHost: HTMLElement, primary: string, garmentUrl: string) {
+  private renderUploadStep(modal: HTMLElement, overlay: HTMLElement, modalHost: HTMLElement, primary: string, garmentUrl: string, category: string) {
     modal.innerHTML = `
       <button class="fitai-close">&times;</button>
       <div class="fitai-title">Virtual Try-On</div>
@@ -397,7 +397,7 @@ class FitAIWidget {
 
     const content = modal.querySelector('#fitai-content')!
     this.renderDropzone(content as HTMLElement, primary, (dataUri) => {
-      this.renderPhotoPreview(content as HTMLElement, primary, dataUri, overlay, modalHost, garmentUrl)
+      this.renderPhotoPreview(content as HTMLElement, primary, dataUri, overlay, modalHost, garmentUrl, category)
     })
   }
 
