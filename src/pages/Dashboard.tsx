@@ -80,7 +80,8 @@ export default function Dashboard() {
   const widgetUrl = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
 
   const embedCode = `<!-- Step 1: Add data-fitai-garment to your product images -->
-<img src="your-product.jpg" data-fitai-garment />
+<!-- Use data-fitai-category to specify: tops, bottoms, one-pieces (or omit for auto-detect) -->
+<img src="your-product.jpg" data-fitai-garment data-fitai-category="tops" />
 
 <!-- Step 2: Add the widget script (once per page) -->
 <script
