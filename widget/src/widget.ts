@@ -44,6 +44,7 @@ function getScriptConfig(): WidgetConfig | null {
     brandApiKey: script.dataset.brandId || '',
     garmentUrl: script.dataset.garmentUrl,
     targetSelector: script.dataset.target,
+    category: script.dataset.category,
   }
 }
 
