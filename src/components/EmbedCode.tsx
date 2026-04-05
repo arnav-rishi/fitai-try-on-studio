@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 
 const embedCode = `<!-- Add to your product images -->
-<img src="your-product.jpg" data-fitai-garment />
+<img src="your-product.jpg" data-fitai-garment data-fitai-category="tops" />
 
 <!-- Add once per page -->
 <script src="https://cdn.fitai.in/widget.js" data-brand-id="YOUR_ID" async></script>`;
