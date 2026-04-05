@@ -307,8 +307,9 @@ class FitAIWidget {
       elements.forEach((el) => {
         const imgEl = el as HTMLImageElement
         const url = imgEl.src || imgEl.getAttribute('data-src') || null
+        const category = imgEl.getAttribute('data-fitai-category') || 'auto'
         if (url) {
-          this.injectButton(url, imgEl)
+          this.injectButton(url, imgEl, category)
         }
       })
     }
