@@ -8,7 +8,7 @@ const plans = [
     period: "/mo",
     desc: "For early-stage brands testing the waters",
     features: [
-      "Up to 500 try-on sessions/month",
+      "Up to 1000 try-on sessions/month",
       "1 storefront integration",
       "Standard AI model",
       "Email support",
@@ -23,7 +23,7 @@ const plans = [
     period: "/mo",
     desc: "For brands scaling past ₹1Cr GMV",
     features: [
-      "Up to 5,000 try-on sessions/month",
+      "Up to 2,000 try-on sessions/month",
       "3 storefront integrations",
       "Enhanced AI model",
       "Priority support (WhatsApp)",
@@ -39,7 +39,7 @@ const plans = [
     period: "/mo",
     desc: "For established D2C brands at serious volume",
     features: [
-      "Unlimited try-on sessions",
+      "Up to 8,000 try-on sessions/month",
       "Unlimited integrations",
       "Premium AI model (highest accuracy)",
       "Dedicated account manager",
