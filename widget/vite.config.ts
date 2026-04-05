@@ -11,6 +11,6 @@ export default defineConfig({
     },
     outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
-    minify: 'terser',
+    minify: 'esbuild',
   },
 })
