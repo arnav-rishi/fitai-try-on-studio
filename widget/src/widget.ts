@@ -467,7 +467,7 @@ class FitAIWidget {
     })
   }
 
-  private async runTryOn(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string) {
+  private async runTryOn(container: HTMLElement, primary: string, photoDataUri: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string, category: string) {
     container.innerHTML = `
       <div class="fitai-loading">
         <div class="fitai-spinner"></div>
@@ -483,7 +483,7 @@ class FitAIWidget {
         body: JSON.stringify({
           model_image: photoDataUri,
           garment_url: garmentUrl,
-          category: 'auto',
+          category,
           brand_api_key: this.config.brandApiKey,
         }),
       })
