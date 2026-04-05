@@ -540,7 +540,7 @@ class FitAIWidget {
     }
   }
 
-  private renderResult(container: HTMLElement, primary: string, outputUrl: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string) {
+  private renderResult(container: HTMLElement, primary: string, outputUrl: string, overlay: HTMLElement, modalHost: HTMLElement, garmentUrl: string, category: string) {
     container.innerHTML = `
       <img class="fitai-result-img" src="${outputUrl}" alt="Try-on result">
       <div class="fitai-actions">
@@ -552,7 +552,7 @@ class FitAIWidget {
     const tryAgain = container.querySelector('#fitai-tryagain')!
     tryAgain.addEventListener('click', () => {
       this.renderDropzone(container, primary, (dataUri) => {
-        this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl)
+        this.renderPhotoPreview(container, primary, dataUri, overlay, modalHost, garmentUrl, category)
       })
     })
 
