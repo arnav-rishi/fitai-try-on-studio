@@ -52,13 +52,23 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Use service role to verify ownership and update
+    // Use service role to verify ownership or admin status
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    // Verify the brand belongs to this user
+    // Check if user is admin
+    const { data: roleData } = await adminClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', 'admin')
+      .maybeSingle()
+
+    const isAdmin = !!roleData
+
+    // Verify the brand exists
     const { data: brand, error: brandError } = await adminClient
       .from('brands')
       .select('id, user_id')
@@ -72,8 +82,9 @@ Deno.serve(async (req) => {
       })
     }
 
-    if (brand.user_id !== userId) {
-      return new Response(JSON.stringify({ error: 'Forbidden: you do not own this brand' }), {
+    // Must be admin or brand owner
+    if (!isAdmin && brand.user_id !== userId) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
