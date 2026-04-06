@@ -253,17 +253,21 @@ export default function Admin() {
                         </label>
                         <div className="relative">
                           <pre className="bg-secondary p-3 font-mono text-[11px] text-foreground overflow-x-auto" style={{ borderRadius: "2px" }}>
-{`<img src="product.jpg" data-fitai-garment data-fitai-category="tops" />
+{`<!-- Add this script once, before </body> on every page (or in your global template) -->
 <script
   src="${widgetUrl}"
   data-brand-id="${brand.api_key}"
-  async></script>`}
+  async></script>
+
+<!-- Then tag any product image with data-fitai-garment -->
+<!-- Example: <img src="product.jpg" data-fitai-garment data-fitai-category="tops" /> -->
+<!-- The widget auto-discovers all tagged images on the page -->`}
                           </pre>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               copyToClipboard(
-                                `<img src="product.jpg" data-fitai-garment data-fitai-category="tops" />\n<script\n  src="${widgetUrl}"\n  data-brand-id="${brand.api_key}"\n  async></script>`,
+                                `<script\n  src="${widgetUrl}"\n  data-brand-id="${brand.api_key}"\n  async></script>`,
                                 brand.id + "-embed"
                               );
                             }}
