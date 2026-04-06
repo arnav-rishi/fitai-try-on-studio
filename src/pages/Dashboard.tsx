@@ -62,6 +62,27 @@ export default function Dashboard() {
     setSaving(false);
   };
 
+  const handleRegenerateKey = async () => {
+    if (!brand) return;
+    if (!window.confirm("Are you sure? This will invalidate your current API key. All existing widget integrations will stop working until updated.")) return;
+    setRegenerating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await supabase.functions.invoke("brand-api-key", {
+        body: { brand_id: brand.id },
+      });
+      if (res.error) throw res.error;
+      const newKey = res.data?.api_key;
+      if (newKey) setBrand({ ...brand, api_key: newKey });
+    } catch (err) {
+      alert("Failed to regenerate API key");
+      console.error(err);
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
