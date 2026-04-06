@@ -154,12 +154,22 @@ export default function Dashboard() {
               onClick={() => copyToClipboard(brand.api_key, "api")}
               className="p-2.5 border border-border hover:border-foreground/40 transition-colors"
               style={{ borderRadius: "2px" }}
+              title="Copy"
             >
               {copied === "api" ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
             </button>
+            <button
+              onClick={handleRegenerateKey}
+              disabled={regenerating}
+              className="p-2.5 border border-border hover:border-destructive/60 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+              style={{ borderRadius: "2px" }}
+              title="Regenerate API Key"
+            >
+              <RefreshCw size={16} className={regenerating ? "animate-spin" : ""} />
+            </button>
           </div>
           <p className="font-body text-xs text-muted-foreground mt-2">
-            Keep this secret. Use it in your embed code.
+            Keep this secret. Use it in your embed code. Regenerating will invalidate the current key.
           </p>
         </section>
 
