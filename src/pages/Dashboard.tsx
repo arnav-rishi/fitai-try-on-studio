@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Copy, Check, LogOut, Loader2 } from "lucide-react";
+import { ArrowLeft, Copy, Check, LogOut, Loader2, RefreshCw } from "lucide-react";
 
 interface Brand {
   id: string;
@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [copied, setCopied] = useState<string | null>(null);
   const [domains, setDomains] = useState("");
   const [saving, setSaving] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +60,27 @@ export default function Dashboard() {
       .eq("id", brand.id);
     setBrand({ ...brand, allowed_domains: domainList });
     setSaving(false);
+  };
+
+  const handleRegenerateKey = async () => {
+    if (!brand) return;
+    if (!window.confirm("Are you sure? This will invalidate your current API key. All existing widget integrations will stop working until updated.")) return;
+    setRegenerating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await supabase.functions.invoke("brand-api-key", {
+        body: { brand_id: brand.id },
+      });
+      if (res.error) throw res.error;
+      const newKey = res.data?.api_key;
+      if (newKey) setBrand({ ...brand, api_key: newKey });
+    } catch (err) {
+      alert("Failed to regenerate API key");
+      console.error(err);
+    } finally {
+      setRegenerating(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -132,12 +154,22 @@ export default function Dashboard() {
               onClick={() => copyToClipboard(brand.api_key, "api")}
               className="p-2.5 border border-border hover:border-foreground/40 transition-colors"
               style={{ borderRadius: "2px" }}
+              title="Copy"
             >
               {copied === "api" ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
             </button>
+            <button
+              onClick={handleRegenerateKey}
+              disabled={regenerating}
+              className="p-2.5 border border-border hover:border-destructive/60 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+              style={{ borderRadius: "2px" }}
+              title="Regenerate API Key"
+            >
+              <RefreshCw size={16} className={regenerating ? "animate-spin" : ""} />
+            </button>
           </div>
           <p className="font-body text-xs text-muted-foreground mt-2">
-            Keep this secret. Use it in your embed code.
+            Keep this secret. Use it in your embed code. Regenerating will invalidate the current key.
           </p>
         </section>
 
