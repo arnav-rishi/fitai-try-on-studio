@@ -26,6 +26,14 @@ export default function Dashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/brand-auth"); return; }
 
+      // Check if user is admin — redirect to admin panel
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id);
+      const isAdminUser = roles?.some((r: any) => r.role === "admin");
+      if (isAdminUser) { navigate("/admin"); return; }
+
       const { data, error } = await supabase
         .from("brands")
         .select("*")
