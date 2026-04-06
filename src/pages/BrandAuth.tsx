@@ -21,14 +21,28 @@ export default function BrandAuth() {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/dashboard");
+        
+        // Check if user is admin
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", signInData.user.id);
+        
+        const isAdminUser = roles?.some((r: any) => r.role === "admin");
+        navigate(isAdminUser ? "/admin" : "/dashboard");
       } else {
         if (!brandName.trim()) {
           throw new Error("Brand name is required");
         }
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: "https://fitai-try-on-studio.lovable.app/brand-auth",
+          },
+        });
         if (error) throw error;
         if (data.user && data.session) {
           // Create brand record
