@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [copied, setCopied] = useState<string | null>(null);
   const [domains, setDomains] = useState("");
   const [saving, setSaving] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
