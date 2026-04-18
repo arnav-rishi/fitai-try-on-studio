@@ -15,8 +15,16 @@ interface Brand {
   created_at: string;
 }
 
+interface BrandStats {
+  count: number;
+  lastActive: string | null;
+}
+
+type CdnStatus = "checking" | "online" | "offline";
+
 export default function Admin() {
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [stats, setStats] = useState<Record<string, BrandStats>>({});
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
@@ -24,6 +32,7 @@ export default function Admin() {
   const [creating, setCreating] = useState(false);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [cdnStatus, setCdnStatus] = useState<CdnStatus>("checking");
   const navigate = useNavigate();
 
   useEffect(() => {
