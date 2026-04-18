@@ -179,9 +179,26 @@ export default function Admin() {
           <div className="font-display text-lg font-semibold">
             Fit<span className="text-terracotta">AI</span> Admin
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-1.5 font-body text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <LogOut size={14} /> Sign out
-          </button>
+          <div className="flex items-center gap-4">
+            <div
+              className="flex items-center gap-1.5 font-body text-xs text-muted-foreground"
+              title={`Widget CDN: ${cdnStatus}`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  cdnStatus === "online"
+                    ? "bg-green-500"
+                    : cdnStatus === "offline"
+                    ? "bg-destructive"
+                    : "bg-muted-foreground animate-pulse"
+                }`}
+              />
+              CDN {cdnStatus === "checking" ? "…" : cdnStatus}
+            </div>
+            <button onClick={handleLogout} className="flex items-center gap-1.5 font-body text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <LogOut size={14} /> Sign out
+            </button>
+          </div>
         </div>
       </header>
 
