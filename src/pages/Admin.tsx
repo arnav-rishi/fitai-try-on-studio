@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import {
-  ArrowLeft, Copy, Check, LogOut, Loader2, Plus, RefreshCw, Trash2, ChevronDown, ChevronUp,
+  ArrowLeft, Copy, Check, LogOut, Loader2, Plus, RefreshCw, ChevronDown,
 } from "lucide-react";
 
 interface Brand {
