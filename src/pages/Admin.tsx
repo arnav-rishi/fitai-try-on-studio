@@ -270,7 +270,27 @@ export default function Admin() {
                         </p>
                       </div>
                     </div>
-                    {expandedId === brand.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    <div className="flex items-center gap-5">
+                      <div className="text-right hidden sm:block">
+                        <p className="font-display text-base font-semibold text-foreground leading-none">
+                          {stats[brand.id]?.count ?? 0}
+                        </p>
+                        <p className="font-body text-[10px] tracking-widest text-muted-foreground uppercase mt-1">
+                          try-ons
+                        </p>
+                      </div>
+                      <div className="text-right hidden md:block">
+                        <p className="font-body text-xs text-foreground leading-none">
+                          {stats[brand.id]?.lastActive
+                            ? new Date(stats[brand.id].lastActive!).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+                            : "—"}
+                        </p>
+                        <p className="font-body text-[10px] tracking-widest text-muted-foreground uppercase mt-1">
+                          last active
+                        </p>
+                      </div>
+                      {expandedId === brand.id ? <ChevronDown size={16} className="rotate-180 transition-transform" /> : <ChevronDown size={16} className="transition-transform" />}
+                    </div>
                   </div>
 
                   {/* Expanded Details */}
