@@ -493,7 +493,7 @@ class FitAIWidget {
         throw new Error(err.error || 'Failed to start try-on')
       }
 
-      const { id: jobId } = await runRes.json()
+      const { id: jobId, log_id: logId } = await runRes.json()
       if (!jobId) throw new Error('No job ID returned')
 
       statusEl.textContent = 'Generating your try-on… (~30s)'
@@ -505,7 +505,7 @@ class FitAIWidget {
         const statusRes = await fetch(`${SUPABASE_URL}/functions/v1/fashn-status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: jobId }),
+          body: JSON.stringify({ id: jobId, log_id: logId }),
         })
 
         if (!statusRes.ok) continue
