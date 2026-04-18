@@ -115,19 +115,21 @@ Deno.serve(async (req) => {
     }
 
     // Log usage if brand request
+    let logId: string | null = null
     if (brandId) {
       const supabase = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
       )
-      await supabase.from('tryon_logs').insert({
+      const { data: log } = await supabase.from('tryon_logs').insert({
         brand_id: brandId,
         garment_url: garment_url || null,
         status: 'started',
-      })
+      }).select('id').single()
+      logId = log?.id ?? null
     }
 
-    return new Response(JSON.stringify({ id: runData.id }), {
+    return new Response(JSON.stringify({ id: runData.id, log_id: logId }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
