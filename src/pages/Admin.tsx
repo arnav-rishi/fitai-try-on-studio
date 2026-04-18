@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import {
-  ArrowLeft, Copy, Check, LogOut, Loader2, Plus, RefreshCw, Trash2, ChevronDown, ChevronUp,
+  ArrowLeft, Copy, Check, LogOut, Loader2, Plus, RefreshCw, ChevronDown,
 } from "lucide-react";
 
 interface Brand {
@@ -15,8 +15,16 @@ interface Brand {
   created_at: string;
 }
 
+interface BrandStats {
+  count: number;
+  lastActive: string | null;
+}
+
+type CdnStatus = "checking" | "online" | "offline";
+
 export default function Admin() {
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [stats, setStats] = useState<Record<string, BrandStats>>({});
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
@@ -24,6 +32,7 @@ export default function Admin() {
   const [creating, setCreating] = useState(false);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [cdnStatus, setCdnStatus] = useState<CdnStatus>("checking");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,11 +55,44 @@ export default function Admin() {
 
       // Fetch all brands
       const { data } = await supabase.from("brands").select("*").order("created_at", { ascending: false });
-      setBrands((data as unknown as Brand[]) || []);
+      const brandList = (data as unknown as Brand[]) || [];
+      setBrands(brandList);
+
+      // Fetch try-on stats per brand
+      const { data: logs } = await supabase
+        .from("tryon_logs")
+        .select("brand_id, created_at");
+      const statsMap: Record<string, BrandStats> = {};
+      (logs || []).forEach((log: any) => {
+        const cur = statsMap[log.brand_id] || { count: 0, lastActive: null };
+        cur.count += 1;
+        if (!cur.lastActive || new Date(log.created_at) > new Date(cur.lastActive)) {
+          cur.lastActive = log.created_at;
+        }
+        statsMap[log.brand_id] = cur;
+      });
+      setStats(statsMap);
       setLoading(false);
     };
     load();
   }, [navigate]);
+
+  // CDN health check (HEAD ping every 60s)
+  useEffect(() => {
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
+    const url = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
+    const check = async () => {
+      try {
+        const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+        setCdnStatus(res.ok ? "online" : "offline");
+      } catch {
+        setCdnStatus("offline");
+      }
+    };
+    check();
+    const interval = setInterval(check, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -137,9 +179,26 @@ export default function Admin() {
           <div className="font-display text-lg font-semibold">
             Fit<span className="text-terracotta">AI</span> Admin
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-1.5 font-body text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <LogOut size={14} /> Sign out
-          </button>
+          <div className="flex items-center gap-4">
+            <div
+              className="flex items-center gap-1.5 font-body text-xs text-muted-foreground"
+              title={`Widget CDN: ${cdnStatus}`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  cdnStatus === "online"
+                    ? "bg-green-500"
+                    : cdnStatus === "offline"
+                    ? "bg-destructive"
+                    : "bg-muted-foreground animate-pulse"
+                }`}
+              />
+              CDN {cdnStatus === "checking" ? "…" : cdnStatus}
+            </div>
+            <button onClick={handleLogout} className="flex items-center gap-1.5 font-body text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <LogOut size={14} /> Sign out
+            </button>
+          </div>
         </div>
       </header>
 
@@ -211,7 +270,27 @@ export default function Admin() {
                         </p>
                       </div>
                     </div>
-                    {expandedId === brand.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    <div className="flex items-center gap-5">
+                      <div className="text-right hidden sm:block">
+                        <p className="font-display text-base font-semibold text-foreground leading-none">
+                          {stats[brand.id]?.count ?? 0}
+                        </p>
+                        <p className="font-body text-[10px] tracking-widest text-muted-foreground uppercase mt-1">
+                          try-ons
+                        </p>
+                      </div>
+                      <div className="text-right hidden md:block">
+                        <p className="font-body text-xs text-foreground leading-none">
+                          {stats[brand.id]?.lastActive
+                            ? new Date(stats[brand.id].lastActive!).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+                            : "—"}
+                        </p>
+                        <p className="font-body text-[10px] tracking-widest text-muted-foreground uppercase mt-1">
+                          last active
+                        </p>
+                      </div>
+                      {expandedId === brand.id ? <ChevronDown size={16} className="rotate-180 transition-transform" /> : <ChevronDown size={16} className="transition-transform" />}
+                    </div>
                   </div>
 
                   {/* Expanded Details */}
