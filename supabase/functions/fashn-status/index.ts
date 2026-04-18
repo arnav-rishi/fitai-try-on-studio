@@ -1,3 +1,5 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -17,7 +19,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { id } = await req.json();
+    const { id, log_id } = await req.json();
     if (!id) {
       return new Response(JSON.stringify({ error: 'Missing job id' }), {
         status: 400,
@@ -33,6 +35,8 @@ Deno.serve(async (req) => {
     console.log(`fashn.ai /status/${id}:`, statusRes.status, statusText);
 
     if (!statusRes.ok) {
+      // Mark log as failed if we have it
+      if (log_id) await markLog(log_id, 'failed');
       return new Response(JSON.stringify({ error: `fashn.ai status error: ${statusText}` }), {
         status: statusRes.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -43,13 +47,23 @@ Deno.serve(async (req) => {
     try {
       statusData = JSON.parse(statusText);
     } catch {
+      if (log_id) await markLog(log_id, 'failed');
       return new Response(JSON.stringify({ error: `Invalid JSON from fashn.ai: ${statusText}` }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Return the full status payload to the client
+    // Update tryon_logs on terminal states
+    if (log_id && statusData.status) {
+      const s = statusData.status.toLowerCase();
+      if (s === 'completed' || s === 'success' || s === 'succeeded') {
+        await markLog(log_id, 'completed');
+      } else if (s === 'failed' || s === 'error' || s === 'canceled' || s === 'cancelled') {
+        await markLog(log_id, 'failed');
+      }
+    }
+
     return new Response(JSON.stringify(statusData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -61,3 +75,20 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+async function markLog(logId: string, status: 'completed' | 'failed') {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+    // Only transition from 'started' to a terminal state — avoid duplicate writes
+    await supabase
+      .from('tryon_logs')
+      .update({ status })
+      .eq('id', logId)
+      .eq('status', 'started');
+  } catch (e) {
+    console.error('Failed to update tryon log status:', e);
+  }
+}
