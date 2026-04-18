@@ -55,11 +55,44 @@ export default function Admin() {
 
       // Fetch all brands
       const { data } = await supabase.from("brands").select("*").order("created_at", { ascending: false });
-      setBrands((data as unknown as Brand[]) || []);
+      const brandList = (data as unknown as Brand[]) || [];
+      setBrands(brandList);
+
+      // Fetch try-on stats per brand
+      const { data: logs } = await supabase
+        .from("tryon_logs")
+        .select("brand_id, created_at");
+      const statsMap: Record<string, BrandStats> = {};
+      (logs || []).forEach((log: any) => {
+        const cur = statsMap[log.brand_id] || { count: 0, lastActive: null };
+        cur.count += 1;
+        if (!cur.lastActive || new Date(log.created_at) > new Date(cur.lastActive)) {
+          cur.lastActive = log.created_at;
+        }
+        statsMap[log.brand_id] = cur;
+      });
+      setStats(statsMap);
       setLoading(false);
     };
     load();
   }, [navigate]);
+
+  // CDN health check (HEAD ping every 60s)
+  useEffect(() => {
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
+    const url = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
+    const check = async () => {
+      try {
+        const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+        setCdnStatus(res.ok ? "online" : "offline");
+      } catch {
+        setCdnStatus("offline");
+      }
+    };
+    check();
+    const interval = setInterval(check, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
