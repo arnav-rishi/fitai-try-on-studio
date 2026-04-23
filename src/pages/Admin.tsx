@@ -22,6 +22,9 @@ interface BrandStats {
 
 type CdnStatus = "checking" | "online" | "offline";
 
+const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
+const WIDGET_URL = `https://${PROJECT_ID}.supabase.co/storage/v1/object/public/widget/widget.js`;
+
 export default function Admin() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [stats, setStats] = useState<Record<string, BrandStats>>({});
