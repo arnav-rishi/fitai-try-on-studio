@@ -84,11 +84,9 @@ export default function Admin() {
 
   // CDN health check (HEAD ping every 60s)
   useEffect(() => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
-    const url = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
     const check = async () => {
       try {
-        const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+        const res = await fetch(WIDGET_URL, { method: "HEAD", cache: "no-store" });
         setCdnStatus(res.ok ? "online" : "offline");
       } catch {
         setCdnStatus("offline");
@@ -187,7 +185,7 @@ STEP 1 — Add this script tag once to your global template
 ────────────────────────────
 
 <script
-  src="${widgetUrl}"
+  src="${WIDGET_URL}"
   data-brand-id="${brand.api_key}"
   async></script>
 
@@ -227,9 +225,6 @@ Questions? Reply to this email.
   }
 
   if (!isAdmin) return null;
-
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
-  const widgetUrl = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
