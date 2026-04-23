@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import {
-  ArrowLeft, Copy, Check, LogOut, Loader2, Plus, RefreshCw, ChevronDown,
+  ArrowLeft, Copy, Check, LogOut, Loader2, Plus, RefreshCw, ChevronDown, Mail, Save,
 } from "lucide-react";
 
 interface Brand {
@@ -33,6 +33,8 @@ export default function Admin() {
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [cdnStatus, setCdnStatus] = useState<CdnStatus>("checking");
+  const [domainDrafts, setDomainDrafts] = useState<Record<string, string>>({});
+  const [savingDomainsId, setSavingDomainsId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -149,6 +151,63 @@ export default function Admin() {
     if (!error) {
       setBrands(brands.map(b => b.id === brand.id ? { ...b, is_active: !b.is_active } : b));
     }
+  };
+
+  const handleSaveDomains = async (brand: Brand) => {
+    setSavingDomainsId(brand.id);
+    const raw = domainDrafts[brand.id] ?? brand.allowed_domains.join(", ");
+    const domains = raw
+      .split(/[\s,]+/)
+      .map((d) => d.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, ""))
+      .filter(Boolean);
+    const { error } = await supabase
+      .from("brands")
+      .update({ allowed_domains: domains } as any)
+      .eq("id", brand.id);
+    if (!error) {
+      setBrands(brands.map((b) => (b.id === brand.id ? { ...b, allowed_domains: domains } : b)));
+      setDomainDrafts((d) => ({ ...d, [brand.id]: domains.join(", ") }));
+    } else {
+      alert("Failed to save domains: " + error.message);
+    }
+    setSavingDomainsId(null);
+  };
+
+  const buildOnboardingEmail = (brand: Brand) => {
+    return `Hi team,
+
+You're all set to enable virtual try-on on your store. It's a 2-step setup — no SDK, no npm install, just HTML.
+
+────────────────────────────
+STEP 1 — Add this script tag once to your global template
+(theme.liquid, footer include, _document.tsx, etc.)
+────────────────────────────
+
+<script
+  src="${widgetUrl}"
+  data-brand-id="${brand.api_key}"
+  async></script>
+
+────────────────────────────
+STEP 2 — Tag any product image you want try-on enabled
+────────────────────────────
+
+<img src="/products/shirt.jpg"
+     data-fitai-garment
+     data-fitai-category="tops" />
+
+Categories: tops | bottoms | one-pieces | auto
+
+That's it. The widget will:
+  • Auto-discover every tagged image on every page
+  • Inject a "Try On" button next to each
+  • Handle the photo capture + AI generation
+
+The script is CSS-isolated (Shadow DOM) so it won't conflict with your theme.
+
+Questions? Reply to this email.
+
+— FitAI`;
   };
 
   const handleLogout = async () => {
