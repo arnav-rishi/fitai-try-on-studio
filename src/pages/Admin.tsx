@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import {
-  ArrowLeft, Copy, Check, LogOut, Loader2, Plus, RefreshCw, ChevronDown,
+  ArrowLeft, Copy, Check, LogOut, Loader2, Plus, RefreshCw, ChevronDown, Mail, Save,
 } from "lucide-react";
 
 interface Brand {
@@ -22,6 +22,9 @@ interface BrandStats {
 
 type CdnStatus = "checking" | "online" | "offline";
 
+const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
+const WIDGET_URL = `https://${PROJECT_ID}.supabase.co/storage/v1/object/public/widget/widget.js`;
+
 export default function Admin() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [stats, setStats] = useState<Record<string, BrandStats>>({});
@@ -33,6 +36,8 @@ export default function Admin() {
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [cdnStatus, setCdnStatus] = useState<CdnStatus>("checking");
+  const [domainDrafts, setDomainDrafts] = useState<Record<string, string>>({});
+  const [savingDomainsId, setSavingDomainsId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -79,11 +84,9 @@ export default function Admin() {
 
   // CDN health check (HEAD ping every 60s)
   useEffect(() => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
-    const url = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
     const check = async () => {
       try {
-        const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+        const res = await fetch(WIDGET_URL, { method: "HEAD", cache: "no-store" });
         setCdnStatus(res.ok ? "online" : "offline");
       } catch {
         setCdnStatus("offline");
@@ -151,6 +154,63 @@ export default function Admin() {
     }
   };
 
+  const handleSaveDomains = async (brand: Brand) => {
+    setSavingDomainsId(brand.id);
+    const raw = domainDrafts[brand.id] ?? brand.allowed_domains.join(", ");
+    const domains = raw
+      .split(/[\s,]+/)
+      .map((d) => d.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, ""))
+      .filter(Boolean);
+    const { error } = await supabase
+      .from("brands")
+      .update({ allowed_domains: domains } as any)
+      .eq("id", brand.id);
+    if (!error) {
+      setBrands(brands.map((b) => (b.id === brand.id ? { ...b, allowed_domains: domains } : b)));
+      setDomainDrafts((d) => ({ ...d, [brand.id]: domains.join(", ") }));
+    } else {
+      alert("Failed to save domains: " + error.message);
+    }
+    setSavingDomainsId(null);
+  };
+
+  const buildOnboardingEmail = (brand: Brand) => {
+    return `Hi team,
+
+You're all set to enable virtual try-on on your store. It's a 2-step setup — no SDK, no npm install, just HTML.
+
+────────────────────────────
+STEP 1 — Add this script tag once to your global template
+(theme.liquid, footer include, _document.tsx, etc.)
+────────────────────────────
+
+<script
+  src="${WIDGET_URL}"
+  data-brand-id="${brand.api_key}"
+  async></script>
+
+────────────────────────────
+STEP 2 — Tag any product image you want try-on enabled
+────────────────────────────
+
+<img src="/products/shirt.jpg"
+     data-fitai-garment
+     data-fitai-category="tops" />
+
+Categories: tops | bottoms | one-pieces | auto
+
+That's it. The widget will:
+  • Auto-discover every tagged image on every page
+  • Inject a "Try On" button next to each
+  • Handle the photo capture + AI generation
+
+The script is CSS-isolated (Shadow DOM) so it won't conflict with your theme.
+
+Questions? Reply to this email.
+
+— FitAI`;
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
@@ -165,9 +225,6 @@ export default function Admin() {
   }
 
   if (!isAdmin) return null;
-
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "vcjshbykllrhuodzaguf";
-  const widgetUrl = `https://${projectId}.supabase.co/storage/v1/object/public/widget/widget.js`;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -334,7 +391,7 @@ export default function Admin() {
                           <pre className="bg-secondary p-3 font-mono text-[11px] text-foreground overflow-x-auto" style={{ borderRadius: "2px" }}>
 {`<!-- Add this script once, before </body> on every page (or in your global template) -->
 <script
-  src="${widgetUrl}"
+  src="${WIDGET_URL}"
   data-brand-id="${brand.api_key}"
   async></script>
 
@@ -346,7 +403,7 @@ export default function Admin() {
                             onClick={(e) => {
                               e.stopPropagation();
                               copyToClipboard(
-                                `<script\n  src="${widgetUrl}"\n  data-brand-id="${brand.api_key}"\n  async></script>`,
+                                `<script\n  src="${WIDGET_URL}"\n  data-brand-id="${brand.api_key}"\n  async></script>`,
                                 brand.id + "-embed"
                               );
                             }}
@@ -358,8 +415,54 @@ export default function Admin() {
                         </div>
                       </div>
 
+                      {/* Allowed Domains */}
+                      <div>
+                        <label className="font-body text-xs tracking-widest text-muted-foreground uppercase mb-1.5 block">
+                          Allowed Domains
+                        </label>
+                        <p className="font-body text-[11px] text-muted-foreground mb-2">
+                          Comma-separated list. Subdomains auto-included. Leave empty during onboarding (key works anywhere) — fill in once the brand is live to lock the key to their domains.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={domainDrafts[brand.id] ?? brand.allowed_domains.join(", ")}
+                            onChange={(e) =>
+                              setDomainDrafts({ ...domainDrafts, [brand.id]: e.target.value })
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="brand.com, shop.brand.com"
+                            className="flex-1 bg-secondary border border-border px-3 py-2 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                            style={{ borderRadius: "2px" }}
+                          />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleSaveDomains(brand); }}
+                            disabled={savingDomainsId === brand.id}
+                            className="p-2 border border-border hover:border-primary/60 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                            style={{ borderRadius: "2px" }}
+                            title="Save domains"
+                          >
+                            {savingDomainsId === brand.id ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                          </button>
+                        </div>
+                      </div>
+
                       {/* Actions */}
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard(buildOnboardingEmail(brand), brand.id + "-email");
+                          }}
+                          className="px-4 py-2 font-body text-xs border border-border hover:border-primary/60 text-foreground hover:text-primary transition-colors flex items-center gap-1.5"
+                          style={{ borderRadius: "2px" }}
+                        >
+                          {copied === brand.id + "-email" ? (
+                            <><Check size={12} className="text-green-400" /> Email copied</>
+                          ) : (
+                            <><Mail size={12} /> Copy onboarding email</>
+                          )}
+                        </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleToggleActive(brand); }}
                           className={`px-4 py-2 font-body text-xs border transition-colors ${
