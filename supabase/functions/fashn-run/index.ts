@@ -5,6 +5,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-brand-api-key, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
+function originHost(origin: string): string {
+  try { return new URL(origin).hostname } catch { return '' }
+}
+
+function isDomainAllowed(originHostname: string, allowed: string[]): boolean {
+  if (!originHostname) return false
+  return allowed.some((d) => {
+    const clean = d.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+    if (!clean) return false
+    return originHostname === clean || originHostname.endsWith('.' + clean)
+  })
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -47,7 +60,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // If brand_api_key provided, validate and log usage
+    // If brand_api_key provided, validate, enforce domain, and prepare for usage logging
     let brandId: string | null = null
     if (brand_api_key) {
       const supabase = createClient(
@@ -56,7 +69,7 @@ Deno.serve(async (req) => {
       )
       const { data: brand } = await supabase
         .from('brands')
-        .select('id, is_active')
+        .select('id, is_active, allowed_domains')
         .eq('api_key', brand_api_key)
         .eq('is_active', true)
         .maybeSingle()
@@ -67,6 +80,22 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+
+      // Enforce origin against allowed_domains (mirrors brand-config behavior)
+      const origin = req.headers.get('origin') || ''
+      const allowed = (brand.allowed_domains || []) as string[]
+      if (allowed.length > 0) {
+        const host = originHost(origin)
+        if (!isDomainAllowed(host, allowed)) {
+          return new Response(JSON.stringify({
+            error: `Domain not allowed. Origin "${host || 'unknown'}" is not in this brand's whitelist.`,
+          }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      }
+
       brandId = brand.id
     }
 

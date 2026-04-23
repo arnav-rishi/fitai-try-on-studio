@@ -5,6 +5,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-brand-api-key',
 }
 
+function originHost(origin: string): string {
+  try { return new URL(origin).hostname } catch { return '' }
+}
+
+function isDomainAllowed(originHostname: string, allowed: string[]): boolean {
+  if (!originHostname) return false
+  return allowed.some((d) => {
+    const clean = d.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+    if (!clean) return false
+    return originHostname === clean || originHostname.endsWith('.' + clean)
+  })
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -38,17 +51,16 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Validate origin against allowed_domains if any are set
+    // Validate origin against allowed_domains if any are set.
+    // Empty array = "not configured yet" = allow all (onboarding mode).
     const origin = req.headers.get('origin') || ''
-    if (brand.allowed_domains && brand.allowed_domains.length > 0) {
-      const originHost = (() => {
-        try { return new URL(origin).hostname } catch { return '' }
-      })()
-      const allowed = brand.allowed_domains.some((d: string) =>
-        originHost === d || originHost.endsWith('.' + d)
-      )
-      if (!allowed) {
-        return new Response(JSON.stringify({ error: 'Domain not allowed' }), {
+    const allowed = (brand.allowed_domains || []) as string[]
+    if (allowed.length > 0) {
+      const host = originHost(origin)
+      if (!isDomainAllowed(host, allowed)) {
+        return new Response(JSON.stringify({
+          error: `Domain not allowed. Origin "${host || 'unknown'}" is not in this brand's whitelist.`,
+        }), {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
