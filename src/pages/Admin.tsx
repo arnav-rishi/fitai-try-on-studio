@@ -391,7 +391,7 @@ Questions? Reply to this email.
                           <pre className="bg-secondary p-3 font-mono text-[11px] text-foreground overflow-x-auto" style={{ borderRadius: "2px" }}>
 {`<!-- Add this script once, before </body> on every page (or in your global template) -->
 <script
-  src="${widgetUrl}"
+  src="${WIDGET_URL}"
   data-brand-id="${brand.api_key}"
   async></script>
 
@@ -403,7 +403,7 @@ Questions? Reply to this email.
                             onClick={(e) => {
                               e.stopPropagation();
                               copyToClipboard(
-                                `<script\n  src="${widgetUrl}"\n  data-brand-id="${brand.api_key}"\n  async></script>`,
+                                `<script\n  src="${WIDGET_URL}"\n  data-brand-id="${brand.api_key}"\n  async></script>`,
                                 brand.id + "-embed"
                               );
                             }}
@@ -415,8 +415,54 @@ Questions? Reply to this email.
                         </div>
                       </div>
 
+                      {/* Allowed Domains */}
+                      <div>
+                        <label className="font-body text-xs tracking-widest text-muted-foreground uppercase mb-1.5 block">
+                          Allowed Domains
+                        </label>
+                        <p className="font-body text-[11px] text-muted-foreground mb-2">
+                          Comma-separated list. Subdomains auto-included. Leave empty during onboarding (key works anywhere) — fill in once the brand is live to lock the key to their domains.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={domainDrafts[brand.id] ?? brand.allowed_domains.join(", ")}
+                            onChange={(e) =>
+                              setDomainDrafts({ ...domainDrafts, [brand.id]: e.target.value })
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="brand.com, shop.brand.com"
+                            className="flex-1 bg-secondary border border-border px-3 py-2 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                            style={{ borderRadius: "2px" }}
+                          />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleSaveDomains(brand); }}
+                            disabled={savingDomainsId === brand.id}
+                            className="p-2 border border-border hover:border-primary/60 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                            style={{ borderRadius: "2px" }}
+                            title="Save domains"
+                          >
+                            {savingDomainsId === brand.id ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                          </button>
+                        </div>
+                      </div>
+
                       {/* Actions */}
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard(buildOnboardingEmail(brand), brand.id + "-email");
+                          }}
+                          className="px-4 py-2 font-body text-xs border border-border hover:border-primary/60 text-foreground hover:text-primary transition-colors flex items-center gap-1.5"
+                          style={{ borderRadius: "2px" }}
+                        >
+                          {copied === brand.id + "-email" ? (
+                            <><Check size={12} className="text-green-400" /> Email copied</>
+                          ) : (
+                            <><Mail size={12} /> Copy onboarding email</>
+                          )}
+                        </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleToggleActive(brand); }}
                           className={`px-4 py-2 font-body text-xs border transition-colors ${
